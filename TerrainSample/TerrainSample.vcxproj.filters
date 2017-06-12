@@ -35,9 +35,6 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <FxCompile Include="TerrainPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -50,5 +47,8 @@
     <FxCompile Include="TerrainDS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

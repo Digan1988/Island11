@@ -357,7 +357,7 @@ float4 WaterPatchPS(PSIn_Diffuse input) : SV_Target
 
 	// calculating correction that shifts reflection up/down according to water wave Y position
 	float4 projected_waveheight = mul(float4(input.positionWS.x, input.positionWS.y, input.positionWS.z, 1), g_ModelViewProjectionMatrix);
-		float waveheight_correction = -0.5*projected_waveheight.y / projected_waveheight.w;
+	float waveheight_correction = -0.5*projected_waveheight.y / projected_waveheight.w;
 	projected_waveheight = mul(float4(input.positionWS.x, -0.8, input.positionWS.z, 1), g_ModelViewProjectionMatrix);
 	waveheight_correction += 0.5*projected_waveheight.y / projected_waveheight.w;
 	reflection_disturbance.y = max(-0.15, waveheight_correction + reflection_disturbance.y);

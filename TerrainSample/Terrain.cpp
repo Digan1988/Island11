@@ -70,6 +70,8 @@ void Terrain::Initialize(ID3D11Device* device)
 {
 	pDevice = device;
 
+	initEffect();
+
 	m_states = std::make_unique<CommonStates>(pDevice);
 
 	const D3D11_INPUT_ELEMENT_DESC TerrainLayout =
@@ -82,7 +84,7 @@ void Terrain::Initialize(ID3D11Device* device)
 	ID3D10Blob* RenderHeightfieldVS_Buffer = nullptr;
 
 	ID3D10Blob* pErrorMessage = nullptr;
-	HRESULT result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "PassThroughVS", pTarget, D3D10_SHADER_ENABLE_STRICTNESS, 0, &RenderHeightfieldVS_Buffer, &pErrorMessage);
+	HRESULT result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "PassThroughVS", pTarget, D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &RenderHeightfieldVS_Buffer, &pErrorMessage);
 
 	result = device->CreateInputLayout(&TerrainLayout, 1, RenderHeightfieldVS_Buffer->GetBufferPointer(), RenderHeightfieldVS_Buffer->GetBufferSize(), &heightfield_inputlayout);
 
@@ -1191,6 +1193,12 @@ void Terrain::SetupReflectionView(Camera *cam)
 	float aspectRatio = BackbufferWidth / BackbufferHeight;
 	//printf("%f %f\n", BackbufferWidth, BackbufferHeight);
 
+	const XMFLOAT3 EyePointO = cam->GetEyePt();
+	const XMFLOAT3 LookAtPointO = cam->GetLookAtPt();
+
+	//printf("EyePointO: %f %f %f\n", EyePointO.x, EyePointO.y, EyePointO.z);
+	//printf("LookAtPointO: %f %f %f\n", LookAtPointO.x, LookAtPointO.y, LookAtPointO.z);
+
 	XMVECTOR EyePoint;
 	XMVECTOR LookAtPoint;
 
@@ -1199,6 +1207,9 @@ void Terrain::SetupReflectionView(Camera *cam)
 
 	EyePoint.m128_f32[1] = -1.0f*EyePoint.m128_f32[1] + 1.0f;
 	LookAtPoint.m128_f32[1] = -1.0f*LookAtPoint.m128_f32[1] + 1.0f;
+
+	//printf("EyePoint: %f %f %f\n", EyePoint.m128_f32[0], EyePoint.m128_f32[1], EyePoint.m128_f32[2]);
+	//printf("LookAtPoint: %f %f %f\n", LookAtPoint.m128_f32[0], LookAtPoint.m128_f32[1], LookAtPoint.m128_f32[2]);
 
 
 	XMMATRIX mView;
@@ -1226,30 +1237,27 @@ void Terrain::SetupReflectionView(Camera *cam)
 
 	mWorld = XMLoadFloat4x4(&_mWorld);
 
-	mView = XMMATRIX(0.928688, 0.132364, -0.346437, 0.000000,
-		-0.000004, 0.934135, 0.356919, 0.000000,
-		0.370863, -0.331468, 0.867519, 0.000000,
-		-400.534271, 10.447224, -16.130966, 1.000000);  //XMMatrixInverse(NULL, mWorld);
+	mView = XMMatrixInverse(NULL, mWorld);
 
-	mProj = XMMatrixPerspectiveFovLH(camera_fov * XM_PI / 360.0f, aspectRatio, scene_z_near, scene_z_far);
+	mProj = XMLoadFloat4x4(&cam->GetProjMatrix());//  XMMatrixPerspectiveFovLH(camera_fov * XM_PI / 360.0f, aspectRatio, scene_z_near, scene_z_far);
 
 	mViewProj = mView*mProj;
 	XMStoreFloat4x4(&cbuffer.g_ModelViewProjectionMatrix, XMMatrixTranspose(mViewProj));
 
-	XMFLOAT4X4 projMatr;
-	XMStoreFloat4x4(&projMatr, mView);
-	printf("_mView:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
-		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
-		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
-		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
-		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+	//XMFLOAT4X4 projMatr;
+	//XMStoreFloat4x4(&projMatr, mView);
+	//printf("_mView:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+	//	projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+	//	projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+	//	projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+	//	projMatr._41, projMatr._42, projMatr._43, projMatr._44);
 
-	XMStoreFloat4x4(&projMatr, mProj);
-	printf("_mProj:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
-		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
-		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
-		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
-		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+	//XMStoreFloat4x4(&projMatr, mProj);
+	//printf("_mProj:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+	//	projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+	//	projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+	//	projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+	//	projMatr._41, projMatr._42, projMatr._43, projMatr._44);
 
 	XMStoreFloat3(&cbuffer.g_CameraPosition, EyePoint);
 
@@ -1307,12 +1315,54 @@ void Terrain::SetupNormalView(Camera *cam)
 
 	EyePoint = XMLoadFloat3(&cam->GetEyePt());
 	LookAtPoint = XMLoadFloat3(&cam->GetLookAtPt());
+
 	XMMATRIX mView = XMLoadFloat4x4(&cam->GetViewMatrix());
+
+	
+	//XMMATRIX mView = XMMATRIX(0.900471, -0.157262, -0.405489, 0.000000,
+	//	0.000001, 0.932338, -0.361588, 0.000000,
+	//	0.434917, 0.325599, 0.839543, 0.000000,
+	//	-400.867950, 0.554043, 9.724188, 1.000000);  
+
+	//XMMATRIX mProjMatrix = XMMATRIX(1.034029, 0.000000, 0.000000, 0.000000,
+	//		0.000000, 1.920982, 0.000000, 0.000000,
+	//		0.000000, 0.000000, 1.000040, 1.000000,
+	//		0.000000, 0.000000, -1.000040, 0.000000);
+
 	XMMATRIX mProjMatrix = XMLoadFloat4x4(&cam->GetProjMatrix());
 	XMMATRIX mViewProj = mView * mProjMatrix;
 	XMMATRIX mViewProjInv;
 	mViewProjInv = XMMatrixInverse(NULL, mViewProj);
 	XMVECTOR cameraPosition = XMLoadFloat3(&cam->GetEyePt());
+
+	XMFLOAT4X4 projMatr;
+	XMStoreFloat4x4(&projMatr, mView);
+	printf("mView:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+
+	XMStoreFloat4x4(&projMatr, mProjMatrix);
+	printf("mProjMatrix:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+
+	XMStoreFloat4x4(&projMatr, mViewProj);
+	printf("mViewProj:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+
+	XMStoreFloat4x4(&projMatr, mViewProjInv);
+	printf("mViewProjInv:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
 
 	XMStoreFloat4x4(&cbuffer.g_ModelViewMatrix, XMMatrixTranspose(mView));
 	XMStoreFloat4x4(&cbuffer.g_ModelViewProjectionMatrix, XMMatrixTranspose(mViewProj));
@@ -1323,10 +1373,17 @@ void Terrain::SetupNormalView(Camera *cam)
 	XMVECTOR direction = LookAtPoint - EyePoint;
 	XMVECTOR normalized_direction = XMVector3Normalize(direction);
 
+	printf("EyePoint: %f %f %f\n", EyePoint.m128_f32[0], EyePoint.m128_f32[1], EyePoint.m128_f32[2]);
+	printf("LookAtPoint: %f %f %f\n", LookAtPoint.m128_f32[0], LookAtPoint.m128_f32[1], LookAtPoint.m128_f32[2]);
+	printf("normalized_direction: %f %f %f\n", normalized_direction.m128_f32[0], normalized_direction.m128_f32[1], normalized_direction.m128_f32[2]);
+
 	XMStoreFloat3(&cbuffer.g_CameraDirection, normalized_direction);
 
 	cbuffer.g_HalfSpaceCullSign = 1.0;
 	cbuffer.g_HalfSpaceCullPosition = terrain_minheight * 2;
+
+	//tmp
+	//cbuffer.g_HalfSpaceCullPosition = -0.6;
 }
 
 void Terrain::createShaders()
@@ -1813,4 +1870,22 @@ void Terrain::renderTarrainToDepthBuffer(ID3D11DeviceContext* pContext, Camera *
 	pContext->HSSetShader(nullptr, nullptr, 0);
 	pContext->DSSetShader(nullptr, nullptr, 0);
 	pContext->PSSetShader(nullptr, nullptr, 0);
+}
+
+
+void Terrain::initEffect()
+{
+	//ID3D10Blob* pErrorMessage = nullptr;
+
+	//ID3D10Blob* pShader = nullptr;
+
+	//D3DXCompileShaderFromFile(L"Island11.fx", NULL, NULL, NULL, "fx_5_0", 0, &pShader, NULL, NULL);
+
+	//HRESULT result = D3DCompileFromFile(L"Island11.fx", nullptr, nullptr, nullptr, "fx_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pShader, &pErrorMessage);
+
+	//char* compileErrors = (char*)(pErrorMessage->GetBufferPointer());
+
+	//HRESULT hr = D3DX11CreateEffectFromMemory(pShader->GetBufferPointer(), pShader->GetBufferSize(), 0, pDevice, &pEffect);
+
+	//hr = hr;
 }

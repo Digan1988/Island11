@@ -63,7 +63,7 @@ cbuffer cb: register(b0)
 		float		g_RockBumpHeightScale = 3.0;
 	float		g_SandBumpHeightScale = 0.5;
 	float       g_TerrainSpecularIntensity = 0.5;
-	float		g_WaterHeightBumpScale = 1.0f;
+	float		g_WaterHeightBumpScale = 0.0f;
 
 	float2		g_WaterMicroBumpTexcoordScale = { 225, 225 };
 		float2		g_WaterBumpTexcoordScale = { 7, 7 };
@@ -102,7 +102,7 @@ float CalculateTessellationFactor(float distance)
 {
 	//tmp
 	float g_StaticTessFactor = 1.0f;
-	float g_DynamicTessFactor = 5.0f;
+	float g_DynamicTessFactor = 1.0f;
 	float g_UseDynamicLOD = 1.0f;
 	return lerp(g_StaticTessFactor, g_DynamicTessFactor*(1 / (0.015*distance)), g_UseDynamicLOD);
 }
@@ -160,20 +160,20 @@ PSIn_Diffuse HeightFieldPatchDS(PatchData input,
 	float2	g_SandBumpTexcoordScale = { 3.5, 3.5 };
 	float	g_SandBumpHeightScale = 0.5;
 	float2	g_RockBumpTexcoordScale = { 10.0, 10.0 };
-		float	g_RockBumpHeightScale = 3.0;
+	float	g_RockBumpHeightScale = 3.0;
 	float	g_SkipCausticsCalculation = 0.0f;
 	float	g_RenderCaustics = 1.0f;
 	float	g_WaterHeightBumpScale = 1.0f;
 	float2	g_DiffuseTexcoordScale = { 130.0, 130.0 };
 
-		float2 texcoord0to1 = (input.origin + uv * input.size) / g_HeightFieldSize;
+	float2 texcoord0to1 = (input.origin + uv * input.size) / g_HeightFieldSize;
 
-		texcoord0to1.y = 1 - texcoord0to1.y;
+	texcoord0to1.y = 1 - texcoord0to1.y;
 
 	// fetching base heightmap,normal and moving vertices along y axis
 	float4 base_texvalue = g_HeightfieldTexture.SampleLevel(SamplerLinearWrap, texcoord0to1, 0);
-		float3 base_normal = base_texvalue.xyz;
-		base_normal.z = -base_normal.z;
+	float3 base_normal = base_texvalue.xyz;
+	base_normal.z = -base_normal.z;
 
 	float3 vertexPosition;
 	vertexPosition.xz = input.origin + uv * input.size;

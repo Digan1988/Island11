@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "Game.h"
 #include <d3dcompiler.h>
+#include "d3dx11effect.h"
 #include "DDSTextureLoader.h"
 
 using namespace DirectX;
@@ -14,6 +15,8 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 static const float ROTATION_GAIN = 0.004f;
+
+ID3DX11Effect*      g_pEffect = NULL;
 
 Game::Game() :
     m_window(0),
@@ -43,13 +46,13 @@ void Game::Initialize(HWND window, int width, int height)
 
 	m_pConstantBuffer = nullptr;
 
-	cameraPos = Vector3(365.000031, 3.000003, 166.000015);
+	cameraPos = Vector3(365.0f, 3.0f, 166.0f);
 
 	//cameraLookAt = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), XMMatrixIdentity());
 	//cameraLookAt = XMVector3Normalize(cameraLookAt);
 
 	//cameraLookAt = cameraPos + cameraLookAt;
-	cameraLookAt = Vector3(364.653564, 2.643080, 166.867523);
+	cameraLookAt = Vector3(330.0f, -11.0f, 259.0f);
 
     CreateResources();
 
@@ -107,33 +110,33 @@ void Game::Update(DX::StepTimer const& timer)
 	//	moveLeftRight += 0.5;
 	//}
 
-	//Mouse::State mouse = m_mouse->GetState();
+	Mouse::State mouse = m_mouse->GetState();
 
-	//if (mouse.positionMode == Mouse::MODE_RELATIVE)
-	//{
-	//	Vector3 delta = Vector3(float(mouse.x), float(mouse.y), 0.f) * ROTATION_GAIN;
+	if (mouse.positionMode == Mouse::MODE_RELATIVE)
+	{
+		Vector3 delta = Vector3(float(mouse.x), float(mouse.y), 0.f) * ROTATION_GAIN;
 
-	//	m_pitch += delta.y;
-	//	m_yaw += delta.x;
+		m_pitch += delta.y;
+		m_yaw += delta.x;
 
-	//	// limit pitch to straight up or straight down
-	//	// with a little fudge-factor to avoid gimbal lock
-	//	float limit = XM_PI / 2.0f - 0.01f;
-	//	m_pitch = std::max(-limit, m_pitch);
-	//	m_pitch = std::min(+limit, m_pitch);
+		// limit pitch to straight up or straight down
+		// with a little fudge-factor to avoid gimbal lock
+		float limit = XM_PI / 2.0f - 0.01f;
+		m_pitch = std::max(-limit, m_pitch);
+		m_pitch = std::min(+limit, m_pitch);
 
-	//	// keep longitude in sane range by wrapping
-	//	if (m_yaw > XM_PI)
-	//	{
-	//		m_yaw -= XM_PI * 2.0f;
-	//	}
-	//	else if (m_yaw < -XM_PI)
-	//	{
-	//		m_yaw += XM_PI * 2.0f;
-	//	}
-	//}
+		// keep longitude in sane range by wrapping
+		if (m_yaw > XM_PI)
+		{
+			m_yaw -= XM_PI * 2.0f;
+		}
+		else if (m_yaw < -XM_PI)
+		{
+			m_yaw += XM_PI * 2.0f;
+		}
+	}
 
-	//m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
+	m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 
 	updateCamera();
 }
@@ -144,20 +147,20 @@ void Game::updateCamera()
 	XMVECTOR DefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 
 	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(m_pitch, m_yaw, 0);
-	//cameraLookAt = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-	//cameraLookAt = XMVector3Normalize(cameraLookAt);
+	cameraLookAt = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
+	cameraLookAt = XMVector3Normalize(cameraLookAt);
 
 	XMVECTOR camRight = XMVector3TransformCoord(DefaultRight, camRotationMatrix);
 	XMVECTOR camForward = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
 	XMVECTOR camUp = XMVector3Cross(camForward, camRight);
 
-	//cameraPos += moveLeftRight*camRight;
-	//cameraPos += moveBackForward*camForward;
+	cameraPos += moveLeftRight*camRight;
+	cameraPos += moveBackForward*camForward;
 
 	moveLeftRight = 0.0f;
 	moveBackForward = 0.0f;
 
-	//cameraLookAt = cameraPos + cameraLookAt;
+	cameraLookAt = cameraPos + cameraLookAt;
 
 	//printf("cameraPos: %f %f %f\n", cameraPos.x, cameraPos.y, cameraPos.z);
 	//printf("cameraLookAt: %f %f %f\n", cameraLookAt.x, cameraLookAt.y, cameraLookAt.z);
@@ -508,7 +511,7 @@ void Game::CreateResources()
 
 	XMStoreFloat4x4(&m_view, mView);
 
-	XMMATRIX mProj = XMMatrixPerspectiveFovLH(XM_PI / 4.f, float(backBufferWidth) / float(backBufferHeight), scene_z_near, scene_z_far);
+	XMMATRIX mProj = XMMatrixPerspectiveFovLH(camera_fov * XM_PI / 360.0f, float(backBufferWidth) / float(backBufferHeight), scene_z_near, scene_z_far);
 
 	XMStoreFloat4x4(&m_proj, mProj);
 
