@@ -1335,34 +1335,34 @@ void Terrain::SetupNormalView(Camera *cam)
 	mViewProjInv = XMMatrixInverse(NULL, mViewProj);
 	XMVECTOR cameraPosition = XMLoadFloat3(&cam->GetEyePt());
 
-	XMFLOAT4X4 projMatr;
-	XMStoreFloat4x4(&projMatr, mView);
-	printf("mView:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
-		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
-		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
-		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
-		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+	//XMFLOAT4X4 projMatr;
+	//XMStoreFloat4x4(&projMatr, mView);
+	//printf("mView:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+	//	projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+	//	projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+	//	projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+	//	projMatr._41, projMatr._42, projMatr._43, projMatr._44);
 
-	XMStoreFloat4x4(&projMatr, mProjMatrix);
-	printf("mProjMatrix:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
-		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
-		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
-		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
-		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+	//XMStoreFloat4x4(&projMatr, mProjMatrix);
+	//printf("mProjMatrix:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+	//	projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+	//	projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+	//	projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+	//	projMatr._41, projMatr._42, projMatr._43, projMatr._44);
 
-	XMStoreFloat4x4(&projMatr, mViewProj);
-	printf("mViewProj:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
-		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
-		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
-		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
-		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+	//XMStoreFloat4x4(&projMatr, mViewProj);
+	//printf("mViewProj:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+	//	projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+	//	projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+	//	projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+	//	projMatr._41, projMatr._42, projMatr._43, projMatr._44);
 
-	XMStoreFloat4x4(&projMatr, mViewProjInv);
-	printf("mViewProjInv:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
-		projMatr._11, projMatr._12, projMatr._13, projMatr._14,
-		projMatr._21, projMatr._22, projMatr._23, projMatr._24,
-		projMatr._31, projMatr._32, projMatr._33, projMatr._34,
-		projMatr._41, projMatr._42, projMatr._43, projMatr._44);
+	//XMStoreFloat4x4(&projMatr, mViewProjInv);
+	//printf("mViewProjInv:\n %f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n\n",
+	//	projMatr._11, projMatr._12, projMatr._13, projMatr._14,
+	//	projMatr._21, projMatr._22, projMatr._23, projMatr._24,
+	//	projMatr._31, projMatr._32, projMatr._33, projMatr._34,
+	//	projMatr._41, projMatr._42, projMatr._43, projMatr._44);
 
 	XMStoreFloat4x4(&cbuffer.g_ModelViewMatrix, XMMatrixTranspose(mView));
 	XMStoreFloat4x4(&cbuffer.g_ModelViewProjectionMatrix, XMMatrixTranspose(mViewProj));
@@ -1373,9 +1373,9 @@ void Terrain::SetupNormalView(Camera *cam)
 	XMVECTOR direction = LookAtPoint - EyePoint;
 	XMVECTOR normalized_direction = XMVector3Normalize(direction);
 
-	printf("EyePoint: %f %f %f\n", EyePoint.m128_f32[0], EyePoint.m128_f32[1], EyePoint.m128_f32[2]);
-	printf("LookAtPoint: %f %f %f\n", LookAtPoint.m128_f32[0], LookAtPoint.m128_f32[1], LookAtPoint.m128_f32[2]);
-	printf("normalized_direction: %f %f %f\n", normalized_direction.m128_f32[0], normalized_direction.m128_f32[1], normalized_direction.m128_f32[2]);
+	//printf("EyePoint: %f %f %f\n", EyePoint.m128_f32[0], EyePoint.m128_f32[1], EyePoint.m128_f32[2]);
+	//printf("LookAtPoint: %f %f %f\n", LookAtPoint.m128_f32[0], LookAtPoint.m128_f32[1], LookAtPoint.m128_f32[2]);
+	//printf("normalized_direction: %f %f %f\n", normalized_direction.m128_f32[0], normalized_direction.m128_f32[1], normalized_direction.m128_f32[2]);
 
 	XMStoreFloat3(&cbuffer.g_CameraDirection, normalized_direction);
 

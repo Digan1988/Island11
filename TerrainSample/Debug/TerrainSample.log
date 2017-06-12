@@ -1,4 +1,0 @@
-﻿  Terrain.cpp
-c:\_dev\terrainsample_island\terrainsample\terrainsample\terrain.cpp(1105): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  TerrainSample.vcxproj -> C:\_dev\TerrainSample_ISLAND\TerrainSample\Debug\TerrainSample.exe
-  TerrainSample.vcxproj -> C:\_dev\TerrainSample_ISLAND\TerrainSample\Debug\TerrainSample.pdb (Full PDB)
