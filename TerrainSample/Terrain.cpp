@@ -1279,9 +1279,10 @@ void Terrain::SetupLightView(Camera *cam)
 	XMVECTOR lookUp = XMVectorSet(0, 1, 0, 0);
 	XMVECTOR cameraPosition = XMLoadFloat3(&cam->GetEyePt());
 
-	float nr, fr;
-	nr = sqrt(EyePoint.m128_f32[0] *EyePoint.m128_f32[0] + EyePoint.m128_f32[1]*EyePoint.m128_f32[1] + EyePoint.m128_f32[2]*EyePoint.m128_f32[2]) - terrain_far_range*0.7f;
-	fr = sqrt(EyePoint.m128_f32[0]*EyePoint.m128_f32[0] + EyePoint.m128_f32[1]*EyePoint.m128_f32[1] + EyePoint.m128_f32[2]*EyePoint.m128_f32[2]) + terrain_far_range*0.7f;
+	XMVECTOR vectLength = XMVector3Length(EyePoint);
+
+	float nr = vectLength.m128_f32[0] - terrain_far_range*0.7f;
+	float fr = vectLength.m128_f32[0] + terrain_far_range*0.7f;
 
 	XMMATRIX mView = XMMatrixLookAtLH(EyePoint, LookAtPoint, lookUp);
 	XMMATRIX mProjMatrix = XMMatrixOrthographicLH(terrain_far_range*1.5, terrain_far_range, nr, fr);
