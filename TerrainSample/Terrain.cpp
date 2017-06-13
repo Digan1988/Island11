@@ -70,8 +70,6 @@ void Terrain::Initialize(ID3D11Device* device)
 {
 	pDevice = device;
 
-	initEffect();
-
 	m_states = std::make_unique<CommonStates>(pDevice);
 
 	const D3D11_INPUT_ELEMENT_DESC TerrainLayout =
@@ -1870,22 +1868,4 @@ void Terrain::renderTarrainToDepthBuffer(ID3D11DeviceContext* pContext, Camera *
 	pContext->HSSetShader(nullptr, nullptr, 0);
 	pContext->DSSetShader(nullptr, nullptr, 0);
 	pContext->PSSetShader(nullptr, nullptr, 0);
-}
-
-
-void Terrain::initEffect()
-{
-	//ID3D10Blob* pErrorMessage = nullptr;
-
-	//ID3D10Blob* pShader = nullptr;
-
-	//D3DXCompileShaderFromFile(L"Island11.fx", NULL, NULL, NULL, "fx_5_0", 0, &pShader, NULL, NULL);
-
-	//HRESULT result = D3DCompileFromFile(L"Island11.fx", nullptr, nullptr, nullptr, "fx_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pShader, &pErrorMessage);
-
-	//char* compileErrors = (char*)(pErrorMessage->GetBufferPointer());
-
-	//HRESULT hr = D3DX11CreateEffectFromMemory(pShader->GetBufferPointer(), pShader->GetBufferSize(), 0, pDevice, &pEffect);
-
-	//hr = hr;
 }

@@ -5,7 +5,6 @@
 #include "pch.h"
 #include "Game.h"
 #include <d3dcompiler.h>
-#include "d3dx11effect.h"
 #include "DDSTextureLoader.h"
 
 using namespace DirectX;
@@ -15,8 +14,6 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 static const float ROTATION_GAIN = 0.004f;
-
-ID3DX11Effect*      g_pEffect = NULL;
 
 Game::Game() :
     m_window(0),

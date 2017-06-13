@@ -1,6 +1,5 @@
 #pragma once
 #include <d3d11.h>
-#include "d3dx11effect.h"
 #include <DirectXMath.h>
 #include "CommonStates.h"
 
@@ -338,10 +337,6 @@ private:
 
 	ID3D11RasterizerState *pNoCullMS = nullptr;
 	ID3D11DepthStencilState *pNoDepthStencil = nullptr;
-
-
-	ID3DX11Effect* pEffect;
-	void initEffect();
 };
 
 float bilinear_interpolation(float fx, float fy, float a, float b, float c, float d);
