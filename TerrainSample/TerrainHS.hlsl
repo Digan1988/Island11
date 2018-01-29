@@ -83,7 +83,7 @@ cbuffer cb: register(b0)
 		float       unuse = 0;
 };
 
-Texture2D g_HeightfieldTexture : register(t0);
+Texture2D g_HeightfieldTexture : register(t0);//карта высот
 
 SamplerState SamplerLinearWrap :register(s0);
 
@@ -97,11 +97,11 @@ float CalculateTessellationFactor(float distance)
 	return lerp(g_StaticTessFactor, g_DynamicTessFactor*(1 / (0.015*distance)), g_UseDynamicLOD);
 }
 
-[domain("quad")]
-[partitioning("fractional_odd")]
-[outputtopology("triangle_cw")]
-[outputcontrolpoints(1)]
-[patchconstantfunc("PatchConstantHS")]
+[domain("quad")]//“ип патча
+[partitioning("fractional_odd")]//схема тессел€ции
+[outputtopology("triangle_cw")]//тип примитива вывода дл€ тессел€тора
+[outputcontrolpoints(1)]//количество контрольных точек вывода (на поток), которые будут созданы в шейдере
+[patchconstantfunc("PatchConstantHS")]//функци€ дл€ вычислени€ посто€нных данных патча
 DUMMY PatchHS(InputPatch<HSIn_Heightfield, 1> inputPatch)
 {
 	return (DUMMY)0;

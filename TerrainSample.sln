@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TerrainSample", "TerrainSample\TerrainSample.vcxproj", "{2B2C8D4E-DAFE-4BA3-9C0C-0C59666B9707}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WaterRevision", "WaterRevision\WaterRevision.vcxproj", "{A9AB017A-551A-4690-90AF-90EB92DF4D71}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{2B2C8D4E-DAFE-4BA3-9C0C-0C59666B9707}.Release|Win32.Build.0 = Release|Win32
 		{2B2C8D4E-DAFE-4BA3-9C0C-0C59666B9707}.Release|x64.ActiveCfg = Release|x64
 		{2B2C8D4E-DAFE-4BA3-9C0C-0C59666B9707}.Release|x64.Build.0 = Release|x64
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Debug|Win32.Build.0 = Debug|Win32
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Debug|x64.ActiveCfg = Debug|x64
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Debug|x64.Build.0 = Debug|x64
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Release|Win32.ActiveCfg = Release|Win32
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Release|Win32.Build.0 = Release|Win32
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Release|x64.ActiveCfg = Release|x64
+		{A9AB017A-551A-4690-90AF-90EB92DF4D71}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

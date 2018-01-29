@@ -189,7 +189,7 @@ public:
 
 	void renderTarrain(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam);
 	void renderRefraction(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport);
-	void renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport);
+	void renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam);
 	void renderToBackBuffer(ID3D11DeviceContext* pContext, ID3D11RenderTargetView *colorBuffer, ID3D11DepthStencilView  *backBuffer, D3D11_VIEWPORT &currentViewport);
 	void renderSky(ID3D11DeviceContext* pContext);
 	void renderReflection(ID3D11DeviceContext* pContext, Camera *cam);
@@ -202,40 +202,41 @@ public:
 	void SetupReflectionView(Camera *);
 	void SetupRefractionView(Camera *);
 	void SetupLightView(Camera *);
+	void SetupLightView2(Camera *);
 	float BackbufferWidth;
 	float BackbufferHeight;
 
 	UINT MultiSampleCount;
 	UINT MultiSampleQuality;
 
-	ID3D11Texture2D		*rock_bump_texture;
+	//ID3D11Texture2D		*rock_bump_texture;
 	ID3D11ShaderResourceView *g_RockBumpTexture;
 
-	ID3D11Texture2D		*rock_microbump_texture;
+	//ID3D11Texture2D		*rock_microbump_texture;
 	ID3D11ShaderResourceView *g_RockMicroBumpTexture;
 
-	ID3D11Texture2D		*rock_diffuse_texture;
+	//ID3D11Texture2D		*rock_diffuse_texture;
 	ID3D11ShaderResourceView *g_RockDiffuseTexture;
 
-	ID3D11Texture2D		*sand_bump_texture;
+	//ID3D11Texture2D		*sand_bump_texture;
 	ID3D11ShaderResourceView *g_SandBumpTexture;
 
-	ID3D11Texture2D		*sand_microbump_texture;
+	//ID3D11Texture2D		*sand_microbump_texture;
 	ID3D11ShaderResourceView *g_SandMicroBumpTexture;
 
-	ID3D11Texture2D		*sand_diffuse_texture;
+	//ID3D11Texture2D		*sand_diffuse_texture;
 	ID3D11ShaderResourceView *g_SandDiffuseTexture;
 
-	ID3D11Texture2D		*grass_diffuse_texture;
+	//ID3D11Texture2D		*grass_diffuse_texture;
 	ID3D11ShaderResourceView *g_GrassDiffuseTexture;
 
-	ID3D11Texture2D		*slope_diffuse_texture;
+	//ID3D11Texture2D		*slope_diffuse_texture;
 	ID3D11ShaderResourceView *g_SlopeDiffuseTexture;
 
-	ID3D11Texture2D		*water_bump_texture;
+	//ID3D11Texture2D		*water_bump_texture;
 	ID3D11ShaderResourceView *g_WaterBumpTexture;
 
-	ID3D11Texture2D		*sky_texture;
+	//ID3D11Texture2D		*sky_texture;
 	ID3D11ShaderResourceView *g_SkyTexture;
 
 	ID3D11Texture2D			 *reflection_color_resource;
@@ -244,7 +245,7 @@ public:
 
 	ID3D11Texture2D			 *refraction_color_resource;
 	ID3D11ShaderResourceView *g_RefractionTexture;
-	ID3D11RenderTargetView   *refraction_color_resourceRTV;
+	//ID3D11RenderTargetView   *refraction_color_resourceRTV;
 
 	ID3D11Texture2D			 *shadowmap_resource;
 	ID3D11ShaderResourceView *g_DepthTexture;

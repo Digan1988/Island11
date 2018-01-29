@@ -19,7 +19,7 @@ Game::Game() :
     m_window(0),
 	m_outputWidth(1280),
     m_outputHeight(689),
-	m_featureLevel(D3D_FEATURE_LEVEL_10_0),
+	m_featureLevel(D3D_FEATURE_LEVEL_11_0),
 	m_pitch(0),
 	m_yaw(0),
 	moveBackForward(0),
@@ -375,8 +375,8 @@ void Game::CreateDevice()
 #endif
 
     // DirectX 11.1 if present
-    if (SUCCEEDED(m_d3dDevice.As(&m_d3dDevice1)))
-        (void)m_d3dContext.As(&m_d3dContext1);
+    //if (SUCCEEDED(m_d3dDevice.As(&m_d3dDevice1)))
+    //    (void)m_d3dContext.As(&m_d3dContext1);
 
     // TODO: Initialize device dependent objects here (independent of window size).
 
@@ -575,11 +575,11 @@ void Game::OnDeviceLost()
     // TODO: Add Direct3D resource cleanup here.
     m_depthStencilView.Reset();
     m_renderTargetView.Reset();
-    m_swapChain1.Reset();
+    //m_swapChain1.Reset();
     m_swapChain.Reset();
-    m_d3dContext1.Reset();
+    //m_d3dContext1.Reset();
     m_d3dContext.Reset();
-    m_d3dDevice1.Reset();
+    //m_d3dDevice1.Reset();
     m_d3dDevice.Reset();
 
     CreateDevice();

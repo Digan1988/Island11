@@ -41,7 +41,7 @@ Terrain::Terrain()
 	reflection_color_resourceRTV = nullptr;
 	refraction_color_resource = nullptr;
 	g_RefractionTexture = nullptr;
-	refraction_color_resourceRTV = nullptr;
+	//refraction_color_resourceRTV = nullptr;
 
 	reflection_depth_resource = nullptr;
 	reflection_depth_resourceDSV = nullptr;
@@ -72,32 +72,6 @@ void Terrain::Initialize(ID3D11Device* device)
 
 	m_states = std::make_unique<CommonStates>(pDevice);
 
-	const D3D11_INPUT_ELEMENT_DESC TerrainLayout =
-	{ 
-		"PATCH_PARAMETERS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 
-	};
-
-	const char* pTarget = "vs_4_0";
-
-	ID3D10Blob* RenderHeightfieldVS_Buffer = nullptr;
-
-	ID3D10Blob* pErrorMessage = nullptr;
-	HRESULT result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "PassThroughVS", pTarget, D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &RenderHeightfieldVS_Buffer, &pErrorMessage);
-
-	result = device->CreateInputLayout(&TerrainLayout, 1, RenderHeightfieldVS_Buffer->GetBufferPointer(), RenderHeightfieldVS_Buffer->GetBufferSize(), &heightfield_inputlayout);
-
-	const D3D11_INPUT_ELEMENT_DESC SkyLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
-
-	ID3D10Blob* RenderSkyVS_Buffer = nullptr;
-
-	result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "SkyVS", pTarget, D3D10_SHADER_ENABLE_STRICTNESS, 0, &RenderSkyVS_Buffer, &pErrorMessage);
-
-	result = device->CreateInputLayout(SkyLayout, 2, RenderSkyVS_Buffer->GetBufferPointer(), RenderSkyVS_Buffer->GetBufferSize(), &trianglestrip_inputlayout);
-
 	//Create the buffer to send to the cbuffer in effect file
 	D3D11_BUFFER_DESC cbbd;
 	ZeroMemory(&cbbd, sizeof(D3D11_BUFFER_DESC));
@@ -108,7 +82,7 @@ void Terrain::Initialize(ID3D11Device* device)
 	cbbd.CPUAccessFlags = 0;
 	cbbd.MiscFlags = 0;
 
-	result = device->CreateBuffer(&cbbd, NULL, &cbPerObjectBuffer);
+	HRESULT result = device->CreateBuffer(&cbbd, NULL, &cbPerObjectBuffer);
 
 	D3D11_RASTERIZER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_RASTERIZER_DESC));
@@ -165,11 +139,6 @@ void Terrain::Initialize(ID3D11Device* device)
 
 void Terrain::ReCreateBuffers()
 {
-
-	D3D11_TEXTURE2D_DESC tex_desc;
-	D3D11_SHADER_RESOURCE_VIEW_DESC textureSRV_desc;
-	D3D11_DEPTH_STENCIL_VIEW_DESC DSV_desc;
-
 	SAFE_RELEASE(main_color_resource);
 	SAFE_RELEASE(main_color_resourceSRV);
 	SAFE_RELEASE(main_color_resourceRTV);
@@ -186,7 +155,7 @@ void Terrain::ReCreateBuffers()
 	SAFE_RELEASE(reflection_color_resourceRTV);
 	SAFE_RELEASE(refraction_color_resource);
 	SAFE_RELEASE(g_RefractionTexture);
-	SAFE_RELEASE(refraction_color_resourceRTV);
+	//SAFE_RELEASE(refraction_color_resourceRTV);
 
 	SAFE_RELEASE(reflection_depth_resource);
 	SAFE_RELEASE(reflection_depth_resourceDSV);
@@ -204,7 +173,7 @@ void Terrain::ReCreateBuffers()
 
 	// recreating main color buffer
 
-	ZeroMemory(&textureSRV_desc, sizeof(textureSRV_desc));
+	D3D11_TEXTURE2D_DESC tex_desc;
 	ZeroMemory(&tex_desc, sizeof(tex_desc));
 
 	tex_desc.Width = (UINT)(BackbufferWidth*main_buffer_size_multiplier);
@@ -218,6 +187,9 @@ void Terrain::ReCreateBuffers()
 	tex_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 	tex_desc.CPUAccessFlags = 0;
 	tex_desc.MiscFlags = 0;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC textureSRV_desc;
+	ZeroMemory(&textureSRV_desc, sizeof(textureSRV_desc));
 
 	textureSRV_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	textureSRV_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
@@ -269,6 +241,7 @@ void Terrain::ReCreateBuffers()
 	tex_desc.CPUAccessFlags = 0;
 	tex_desc.MiscFlags = 0;
 
+	D3D11_DEPTH_STENCIL_VIEW_DESC DSV_desc;
 	DSV_desc.Format = DXGI_FORMAT_D32_FLOAT;
 	DSV_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	DSV_desc.Flags = 0;
@@ -332,7 +305,7 @@ void Terrain::ReCreateBuffers()
 
 	pDevice->CreateTexture2D(&tex_desc, NULL, &refraction_color_resource);
 	pDevice->CreateShaderResourceView(refraction_color_resource, &textureSRV_desc, &g_RefractionTexture);
-	pDevice->CreateRenderTargetView(refraction_color_resource, NULL, &refraction_color_resourceRTV);
+	//pDevice->CreateRenderTargetView(refraction_color_resource, NULL, &refraction_color_resourceRTV);
 
 	ZeroMemory(&textureSRV_desc, sizeof(textureSRV_desc));
 	ZeroMemory(&tex_desc, sizeof(tex_desc));
@@ -438,41 +411,41 @@ void Terrain::DeInitialize()
 	SAFE_RELEASE(heightmap_texture);
 	SAFE_RELEASE(g_HeightfieldTexture);
 
-	SAFE_RELEASE(rock_bump_texture);
+	//SAFE_RELEASE(rock_bump_texture);
 	SAFE_RELEASE(g_RockBumpTexture);
 
-	SAFE_RELEASE(rock_microbump_texture);
+	//SAFE_RELEASE(rock_microbump_texture);
 	SAFE_RELEASE(g_RockMicroBumpTexture);
 
-	SAFE_RELEASE(rock_diffuse_texture);
+	//SAFE_RELEASE(rock_diffuse_texture);
 	SAFE_RELEASE(g_RockDiffuseTexture);
 
 
-	SAFE_RELEASE(sand_bump_texture);
+	//SAFE_RELEASE(sand_bump_texture);
 	SAFE_RELEASE(g_SandBumpTexture);
 
-	SAFE_RELEASE(sand_microbump_texture);
+	//SAFE_RELEASE(sand_microbump_texture);
 	SAFE_RELEASE(g_SandMicroBumpTexture);
 
-	SAFE_RELEASE(sand_diffuse_texture);
+	//SAFE_RELEASE(sand_diffuse_texture);
 	SAFE_RELEASE(g_SandDiffuseTexture);
 
 	SAFE_RELEASE(g_SlopeDiffuseTexture);
 	SAFE_RELEASE(g_SlopeDiffuseTexture);
 
-	SAFE_RELEASE(grass_diffuse_texture);
+	//SAFE_RELEASE(grass_diffuse_texture);
 	SAFE_RELEASE(g_GrassDiffuseTexture);
 
 	SAFE_RELEASE(layerdef_texture);
 	SAFE_RELEASE(g_LayerdefTexture);
 
-	SAFE_RELEASE(water_bump_texture);
+	//SAFE_RELEASE(water_bump_texture);
 	SAFE_RELEASE(g_WaterBumpTexture);
 
 	SAFE_RELEASE(depthmap_texture);
 	SAFE_RELEASE(g_DepthMapTexture);
 
-	SAFE_RELEASE(sky_texture);
+	//SAFE_RELEASE(sky_texture);
 	SAFE_RELEASE(g_SkyTexture);
 
 
@@ -493,7 +466,7 @@ void Terrain::DeInitialize()
 	SAFE_RELEASE(reflection_color_resourceRTV);
 	SAFE_RELEASE(refraction_color_resource);
 	SAFE_RELEASE(g_RefractionTexture);
-	SAFE_RELEASE(refraction_color_resourceRTV);
+	//SAFE_RELEASE(refraction_color_resourceRTV);
 
 	SAFE_RELEASE(reflection_depth_resource);
 	SAFE_RELEASE(reflection_depth_resourceDSV);
@@ -1091,64 +1064,39 @@ void Terrain::LoadTextures()
 void Terrain::Render(Camera *cam, ID3D11RenderTargetView *colorBuffer, ID3D11DepthStencilView  *backBuffer, double time)
 {
 	ID3D11DeviceContext* pContext;
-	float origin[2] = { 0, 0 };
-	UINT stride = sizeof(float) * 4;
-	UINT offset = 0;
+	pDevice->GetImmediateContext(&pContext);
+
+	//saving scene color buffer and back buffer to constants
 	UINT cRT = 1;
+	D3D11_VIEWPORT currentViewport;
+	pContext->RSGetViewports(&cRT, &currentViewport);
+	pContext->OMGetRenderTargets(1, &colorBuffer, &backBuffer);
 
 	cbuffer.g_ZNear = 1.0f;
 	cbuffer.g_ZFar = 25000.0f;
 	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
-
 	cbuffer.g_WaterBumpTexcoordShift = XMFLOAT2(time*1.5f, time*0.75f);
 	cbuffer.g_ScreenSizeInv = XMFLOAT2(0.000710, 0.001319);
 	cbuffer.g_DynamicTessFactor = 50.0f;
 	cbuffer.g_StaticTessFactor = 12.0f;
 	cbuffer.g_UseDynamicLOD = 1.0f;
 	cbuffer.g_RenderCaustics = 1.0f;
+	cbuffer.g_HeightFieldOrigin = XMFLOAT2(0, 0);
+	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
 	cbuffer.g_FrustumCullInHS = 1.0f;
-
-	pDevice->GetImmediateContext(&pContext);
 
 	pContext->VSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
 	pContext->HSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
 	pContext->DSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
 	pContext->PSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
 
-	pContext->HSSetShaderResources(0, 1, &g_HeightfieldTexture);
-
-	pContext->DSSetShaderResources(0, 1, &g_HeightfieldTexture);
-	pContext->DSSetShaderResources(1, 1, &g_LayerdefTexture);
-	pContext->DSSetShaderResources(2, 1, &g_SandBumpTexture);
-	pContext->DSSetShaderResources(3, 1, &g_RockBumpTexture);
-	pContext->DSSetShaderResources(5, 1, &g_DepthMapTexture);
-	pContext->DSSetShaderResources(6, 1, &g_WaterBumpTexture);
-
-	pContext->PSSetShaderResources(0, 1, &g_SandMicroBumpTexture);
-	pContext->PSSetShaderResources(1, 1, &g_RockMicroBumpTexture);
-	pContext->PSSetShaderResources(2, 1, &g_SlopeDiffuseTexture);
-	pContext->PSSetShaderResources(3, 1, &g_SandDiffuseTexture);
-	pContext->PSSetShaderResources(4, 1, &g_RockDiffuseTexture);
-	pContext->PSSetShaderResources(5, 1, &g_GrassDiffuseTexture);
-	pContext->PSSetShaderResources(7, 1, &g_WaterBumpTexture);
-	pContext->PSSetShaderResources(8, 1, &g_SkyTexture);
-
-	cbuffer.g_HeightFieldOrigin = XMFLOAT2(origin);
-	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
-
-	D3D11_VIEWPORT currentViewport;
 	D3D11_VIEWPORT main_Viewport;
-
 	main_Viewport.Width = (float)BackbufferWidth*main_buffer_size_multiplier;
 	main_Viewport.Height = (float)BackbufferHeight*main_buffer_size_multiplier;
 	main_Viewport.MaxDepth = 1;
 	main_Viewport.MinDepth = 0;
 	main_Viewport.TopLeftX = 0;
 	main_Viewport.TopLeftY = 0;
-
-	//saving scene color buffer and back buffer to constants
-	pContext->RSGetViewports(&cRT, &currentViewport);
-	pContext->OMGetRenderTargets(1, &colorBuffer, &backBuffer);
 
 	renderTarrainToDepthBuffer(pContext, cam);
 
@@ -1164,7 +1112,7 @@ void Terrain::Render(Camera *cam, ID3D11RenderTargetView *colorBuffer, ID3D11Dep
 
 	renderRefraction(pContext, main_Viewport);
 
-	renderWater(pContext, main_Viewport);
+	renderWater(pContext, main_Viewport, cam);
 
 	//renderSky(pContext);
 
@@ -1277,7 +1225,6 @@ void Terrain::SetupLightView(Camera *cam)
 	XMVECTOR EyePoint = XMVectorSet(-10000.0f, 6500.0f, 10000.0f, 0);
 	XMVECTOR LookAtPoint = XMVectorSet(terrain_far_range / 2.0f, 0.0f, terrain_far_range / 2.0f, 0);
 	XMVECTOR lookUp = XMVectorSet(0, 1, 0, 0);
-	XMVECTOR cameraPosition = XMLoadFloat3(&cam->GetEyePt());
 
 	XMVECTOR vectLength = XMVector3Length(EyePoint);
 
@@ -1285,26 +1232,41 @@ void Terrain::SetupLightView(Camera *cam)
 	float fr = vectLength.m128_f32[0] + terrain_far_range*0.7f;
 
 	XMMATRIX mView = XMMatrixLookAtLH(EyePoint, LookAtPoint, lookUp);
-	XMMATRIX mProjMatrix = XMMatrixOrthographicLH(terrain_far_range*1.5, terrain_far_range, nr, fr);
+	XMMATRIX mProjMatrix = XMMatrixOrthographicLH(724, terrain_far_range, nr, fr);
 	XMMATRIX mViewProj = mView * mProjMatrix;
-	XMMATRIX mViewProjInv;
-	mViewProjInv = XMMatrixInverse(NULL, mViewProj);
-
-	XMStoreFloat4x4(&cbuffer.g_ModelViewProjectionMatrix, XMMatrixTranspose(mViewProj));
-	XMStoreFloat4x4(&cbuffer.g_LightModelViewProjectionMatrix, XMMatrixTranspose(mViewProj));
-	XMStoreFloat4x4(&cbuffer.g_LightModelViewProjectionMatrixInv, XMMatrixTranspose(mViewProjInv));
-
-	XMStoreFloat3(&cbuffer.g_CameraPosition, cameraPosition);
+	//XMMATRIX mViewProjInv = XMMatrixInverse(NULL, mViewProj);
 
 	XMVECTOR direction = XMLoadFloat3(&cam->GetLookAtPt()) - XMLoadFloat3(&cam->GetEyePt());
-
 	XMVECTOR normalized_direction = XMVector3Normalize(direction);
+	XMVECTOR cameraPosition = XMLoadFloat3(&cam->GetEyePt());
 
+	XMStoreFloat4x4(&cbuffer.g_ModelViewProjectionMatrix, XMMatrixTranspose(mViewProj));
+
+	XMStoreFloat3(&cbuffer.g_CameraPosition, cameraPosition);
 	XMStoreFloat3(&cbuffer.g_CameraDirection, normalized_direction);
 
-	cbuffer.g_HalfSpaceCullSign = 1.0;
-	cbuffer.g_HalfSpaceCullPosition = terrain_minheight * 2;
+	cbuffer.g_HalfSpaceCullSign = 1.0;//?
+	cbuffer.g_HalfSpaceCullPosition = terrain_minheight * 2;//?
+}
 
+void Terrain::SetupLightView2(Camera *cam)
+{
+	XMVECTOR EyePoint = XMVectorSet(-10000.0f, 6500.0f, 10000.0f, 0);
+	XMVECTOR LookAtPoint = XMVectorSet(terrain_far_range / 2.0f, 0.0f, terrain_far_range / 2.0f, 0);
+	XMVECTOR lookUp = XMVectorSet(0, 1, 0, 0);
+
+	XMVECTOR vectLength = XMVector3Length(EyePoint);
+
+	float nr = vectLength.m128_f32[0] - terrain_far_range*0.7f;
+	float fr = vectLength.m128_f32[0] + terrain_far_range*0.7f;
+
+	XMMATRIX mView = XMMatrixLookAtLH(EyePoint, LookAtPoint, lookUp);
+	XMMATRIX mProjMatrix = XMMatrixOrthographicLH(724, terrain_far_range, nr, fr);
+	XMMATRIX mViewProj = mView * mProjMatrix;
+	//XMMATRIX mViewProjInv = XMMatrixInverse(NULL, mViewProj);
+
+	XMStoreFloat4x4(&cbuffer.g_LightModelViewProjectionMatrix, XMMatrixTranspose(mViewProj));//?
+	//XMStoreFloat4x4(&cbuffer.g_LightModelViewProjectionMatrixInv, XMMatrixTranspose(mViewProjInv));//?
 }
 
 void Terrain::SetupNormalView(Camera *cam)
@@ -1396,7 +1358,32 @@ void Terrain::createShaders()
 	
 	//VertexShader
 
-	HRESULT result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "PassThroughVS", "vs_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &VS_Buffer, &pErrorMessage);
+	const D3D11_INPUT_ELEMENT_DESC TerrainLayout =
+	{
+		"PATCH_PARAMETERS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
+	};
+
+	const char* pTarget = "vs_4_0";
+
+	ID3D10Blob* RenderHeightfieldVS_Buffer = nullptr;
+
+	HRESULT result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "PassThroughVS", pTarget, D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &RenderHeightfieldVS_Buffer, &pErrorMessage);
+
+	result = pDevice->CreateInputLayout(&TerrainLayout, 1, RenderHeightfieldVS_Buffer->GetBufferPointer(), RenderHeightfieldVS_Buffer->GetBufferSize(), &heightfield_inputlayout);
+
+	const D3D11_INPUT_ELEMENT_DESC SkyLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	ID3D10Blob* RenderSkyVS_Buffer = nullptr;
+
+	result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "SkyVS", pTarget, D3D10_SHADER_ENABLE_STRICTNESS, 0, &RenderSkyVS_Buffer, &pErrorMessage);
+
+	result = pDevice->CreateInputLayout(SkyLayout, 2, RenderSkyVS_Buffer->GetBufferPointer(), RenderSkyVS_Buffer->GetBufferSize(), &trianglestrip_inputlayout);
+
+	result = D3DCompileFromFile(L"TerrainVS.hlsl", nullptr, nullptr, "PassThroughVS", "vs_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &VS_Buffer, &pErrorMessage);
 
 	result = pDevice->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), nullptr, &PassThroughVS);
 
@@ -1481,12 +1468,25 @@ void Terrain::renderTarrain(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_
 	const float BlendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	pContext->OMSetBlendState(pNoBlending, BlendFactor, 0xFFFFFFFF);
 
+	pContext->HSSetShaderResources(0, 1, &g_HeightfieldTexture);
+
+	pContext->DSSetShaderResources(0, 1, &g_HeightfieldTexture);
+	pContext->DSSetShaderResources(1, 1, &g_LayerdefTexture);
+	pContext->DSSetShaderResources(2, 1, &g_SandBumpTexture);
+	pContext->DSSetShaderResources(3, 1, &g_RockBumpTexture);
+
+	pContext->PSSetShaderResources(0, 1, &g_SandMicroBumpTexture);
+	pContext->PSSetShaderResources(1, 1, &g_RockMicroBumpTexture);
+	pContext->PSSetShaderResources(2, 1, &g_SlopeDiffuseTexture);
+	pContext->PSSetShaderResources(3, 1, &g_SandDiffuseTexture);
+	pContext->PSSetShaderResources(4, 1, &g_RockDiffuseTexture);
+	pContext->PSSetShaderResources(5, 1, &g_GrassDiffuseTexture);
 	pContext->PSSetShaderResources(6, 1, &nullSRV);//
 
-	pContext->VSSetShader(PassThroughVS, nullptr, 0);
-	pContext->HSSetShader(PatchHS, nullptr, 0);
-	pContext->DSSetShader(HeightFieldPatchDS, nullptr, 0);
-	pContext->PSSetShader(HeightFieldPatchPS, nullptr, 0);
+	//pContext->VSSetShader(PassThroughVS, nullptr, 0);
+	//pContext->HSSetShader(PatchHS, nullptr, 0);
+	//pContext->DSSetShader(HeightFieldPatchDS, nullptr, 0);
+	//pContext->PSSetShader(HeightFieldPatchPS, nullptr, 0);
 
 	// setting up main rendertarget	
 	pContext->RSSetViewports(1, &main_Viewport);
@@ -1500,6 +1500,8 @@ void Terrain::renderTarrain(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_
 	// drawing terrain to main buffer
 	pContext->PSSetShaderResources(6, 1, &g_DepthTexture);
 
+	SetupLightView2(cam);
+
 	cbuffer.g_TerrainBeingRendered = 1.0f;
 	cbuffer.g_SkipCausticsCalculation = 0.0f;
 
@@ -1512,7 +1514,7 @@ void Terrain::renderTarrain(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_
 	pContext->DSSetShader(HeightFieldPatchDS, nullptr, 0);
 	pContext->PSSetShader(HeightFieldPatchPS, nullptr, 0);
 
-	UINT stride = stride = sizeof(float) * 4;
+	UINT stride = stride = sizeof(float) * 4;//PATCH_PARAMETERS DXGI_FORMAT_R32G32B32A32_FLOAT
 	UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 
@@ -1538,10 +1540,14 @@ void Terrain::renderRefraction(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &ma
 	const float BlendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	pContext->OMSetBlendState(pNoBlending, BlendFactor, 0xFFFFFFFF);
 
-	pContext->VSSetShader(PassThroughVS, nullptr, 0);
-	pContext->HSSetShader(PatchHS, nullptr, 0);
-	pContext->DSSetShader(HeightFieldPatchDS, nullptr, 0);
-	pContext->PSSetShader(HeightFieldPatchPS, nullptr, 0);
+	//pContext->DSSetShaderResources(0, 1, &g_HeightfieldTexture);
+	//pContext->DSSetShaderResources(1, 1, &g_LayerdefTexture);
+	//pContext->DSSetShaderResources(2, 1, &g_SandBumpTexture);
+
+	//pContext->VSSetShader(PassThroughVS, nullptr, 0);
+	//pContext->HSSetShader(PatchHS, nullptr, 0);
+	//pContext->DSSetShader(HeightFieldPatchDS, nullptr, 0);
+	//pContext->PSSetShader(HeightFieldPatchPS, nullptr, 0);
 
 	// resolving main buffer color to refraction color resource
 	pContext->ResolveSubresource(refraction_color_resource, 0, main_color_resource, 0, DXGI_FORMAT_R8G8B8A8_UNORM);
@@ -1560,7 +1566,7 @@ void Terrain::renderRefraction(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &ma
 	pContext->DSSetShader(nullptr, nullptr, 0);
 	pContext->PSSetShader(RefractionDepthManualResolveMS1PS, nullptr, 0);
 
-	UINT stride = sizeof(float) * 6;
+	UINT stride = sizeof(float) * 6;//POSITION (DXGI_FORMAT_R32G32B32A32_FLOAT) + TEXCOORD (DXGI_FORMAT_R32G32_FLOAT)
 	UINT offset = 0;
 
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
@@ -1577,15 +1583,15 @@ void Terrain::renderRefraction(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &ma
 	//g_RefractionTexture->GetResource(&tempResource);
 	//SaveDDSTextureToFile(pContext, tempResource, L"g_RefractionTexture.DDS");
 }
-void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport)
+void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam)
 {
 	pContext->RSSetState(pCullBackMS);
 	pContext->OMSetDepthStencilState(pDepthNormal, 0);
 	const float BlendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	pContext->OMSetBlendState(pNoBlending, BlendFactor, 0xFFFFFFFF);
 
-	pContext->VSSetShader(FullScreenQuadVS, nullptr, 0);
-	pContext->PSSetShader(RefractionDepthManualResolveMS1PS, nullptr, 0);
+	//pContext->VSSetShader(FullScreenQuadVS, nullptr, 0);
+	//pContext->PSSetShader(RefractionDepthManualResolveMS1PS, nullptr, 0);
 
 	// getting back to rendering to main buffer 
 	pContext->RSSetViewports(1, &main_Viewport);
@@ -1596,13 +1602,19 @@ void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Vi
 	//SaveDDSTextureToFile(pContext, tempResource, L"g_RefractionTexture2.dds");
 
 	// drawing water surface to main buffer
-	pContext->PSSetShaderResources(6, 1, &g_DepthTexture);
-	pContext->PSSetShaderResources(10, 1, &g_ReflectionTexture);
-	pContext->PSSetShaderResources(11, 1, &g_RefractionTexture);
-	pContext->PSSetShaderResources(9, 1, &g_RefractionDepthTextureResolved);
+	pContext->HSSetShaderResources(0, 1, &g_HeightfieldTexture);
 
 	pContext->DSSetShaderResources(4, 1, &g_WaterNormalMapTexture);
+	pContext->DSSetShaderResources(5, 1, &g_DepthMapTexture);
+	pContext->DSSetShaderResources(6, 1, &g_WaterBumpTexture);
 
+	pContext->PSSetShaderResources(6, 1, &g_DepthTexture);
+	pContext->PSSetShaderResources(7, 1, &g_WaterBumpTexture);
+	pContext->PSSetShaderResources(9, 1, &g_RefractionDepthTextureResolved);
+	pContext->PSSetShaderResources(10, 1, &g_ReflectionTexture);
+	pContext->PSSetShaderResources(11, 1, &g_RefractionTexture);
+
+	SetupLightView2(cam);
 	cbuffer.g_TerrainBeingRendered = 0.0f;
 
 	pContext->VSSetShader(PassThroughVS, nullptr, 0);
@@ -1613,7 +1625,7 @@ void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Vi
 	pContext->IASetInputLayout(heightfield_inputlayout);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST);
 	//pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	UINT stride = sizeof(float) * 4;
+	UINT stride = sizeof(float) * 4;//PATCH_PARAMETERS DXGI_FORMAT_R32G32B32A32_FLOAT
 	UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 
@@ -1628,10 +1640,10 @@ void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Vi
 
 	pContext->DSSetShaderResources(4, 1, &nullSRV);//
 
-	pContext->VSSetShader(PassThroughVS, nullptr, 0);
-	pContext->HSSetShader(PatchHS, nullptr, 0);
-	pContext->DSSetShader(WaterPatchDS, nullptr, 0);
-	pContext->PSSetShader(WaterPatchPS, nullptr, 0);
+	//pContext->VSSetShader(PassThroughVS, nullptr, 0);
+	//pContext->HSSetShader(PatchHS, nullptr, 0);
+	//pContext->DSSetShader(WaterPatchDS, nullptr, 0);
+	//pContext->PSSetShader(WaterPatchPS, nullptr, 0);
 }
 void Terrain::renderToBackBuffer(ID3D11DeviceContext* pContext, ID3D11RenderTargetView *colorBuffer, ID3D11DepthStencilView  *backBuffer, D3D11_VIEWPORT &currentViewport)
 {
@@ -1657,15 +1669,15 @@ void Terrain::renderToBackBuffer(ID3D11DeviceContext* pContext, ID3D11RenderTarg
 
 	cbuffer.g_MainBufferSizeMultiplier = main_buffer_size_multiplier;
 
-	pContext->IASetInputLayout(trianglestrip_inputlayout);
+	//pContext->IASetInputLayout(trianglestrip_inputlayout);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	pContext->VSSetShader(FullScreenQuadVS, nullptr, 0);
 	pContext->PSSetShader(MainToBackBufferPS, nullptr, 0);
 
-	UINT stride = sizeof(float) * 6;
-	UINT offset = 0;
-	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
+	//UINT stride = sizeof(float) * 6;
+	//UINT offset = 0;
+	//pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
@@ -1680,6 +1692,8 @@ void Terrain::renderToBackBuffer(ID3D11DeviceContext* pContext, ID3D11RenderTarg
 }
 void Terrain::renderSky(ID3D11DeviceContext* pContext)
 {
+	pContext->PSSetShaderResources(8, 1, &g_SkyTexture);
+
 	//drawing sky to main buffer
 	pContext->VSSetShader(SkyVS, nullptr, 0);
 	pContext->PSSetShader(SkyPS, nullptr, 0);
@@ -1687,7 +1701,7 @@ void Terrain::renderSky(ID3D11DeviceContext* pContext)
 	pContext->IASetInputLayout(trianglestrip_inputlayout);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-	UINT stride = sizeof(float) * 6;
+	UINT stride = sizeof(float) * 6;//POSITION (DXGI_FORMAT_R32G32B32A32_FLOAT) + TEXCOORD (DXGI_FORMAT_R32G32_FLOAT)
 	UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &sky_vertexbuffer, &stride, &offset);
 
@@ -1741,18 +1755,33 @@ void Terrain::renderReflection(ID3D11DeviceContext* pContext, Camera *cam)
 
 	pContext->PSSetShaderResources(6, 1, &g_DepthTexture);
 
+	SetupLightView2(cam);
 	cbuffer.g_SkipCausticsCalculation = 1.0f;
 
 	pContext->IASetInputLayout(heightfield_inputlayout);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST);
 	//pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
+	pContext->HSSetShaderResources(0, 1, &g_HeightfieldTexture);
+
+	pContext->DSSetShaderResources(0, 1, &g_HeightfieldTexture);
+	pContext->DSSetShaderResources(1, 1, &g_LayerdefTexture);
+	pContext->DSSetShaderResources(2, 1, &g_SandBumpTexture);
+	pContext->DSSetShaderResources(3, 1, &g_RockBumpTexture);
+
+	pContext->PSSetShaderResources(0, 1, &g_SandMicroBumpTexture);
+	pContext->PSSetShaderResources(1, 1, &g_RockMicroBumpTexture);
+	pContext->PSSetShaderResources(2, 1, &g_SlopeDiffuseTexture);
+	pContext->PSSetShaderResources(3, 1, &g_SandDiffuseTexture);
+	pContext->PSSetShaderResources(4, 1, &g_RockDiffuseTexture);
+	pContext->PSSetShaderResources(5, 1, &g_GrassDiffuseTexture);
+
 	pContext->VSSetShader(PassThroughVS, nullptr, 0);
 	pContext->HSSetShader(PatchHS, nullptr, 0);
 	pContext->DSSetShader(HeightFieldPatchDS, nullptr, 0);
 	pContext->PSSetShader(HeightFieldPatchPS, nullptr, 0);
 
-	stride = sizeof(float) * 4;
+	stride = sizeof(float) * 4;//PATCH_PARAMETERS DXGI_FORMAT_R32G32B32A32_FLOAT
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
@@ -1795,7 +1824,7 @@ void Terrain::renderCaustics(ID3D11DeviceContext* pContext, Camera *cam)
 	pContext->VSSetShader(WaterNormalmapCombineVS, nullptr, 0);
 	pContext->PSSetShader(WaterNormalmapCombinePS, nullptr, 0);
 
-	UINT stride = sizeof(float) * 6;
+	UINT stride = sizeof(float) * 6;//POSITION (DXGI_FORMAT_R32G32B32A32_FLOAT) + TEXCOORD (DXGI_FORMAT_R32G32_FLOAT)
 	UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 
@@ -1838,19 +1867,26 @@ void Terrain::renderTarrainToDepthBuffer(ID3D11DeviceContext* pContext, Camera *
 	//drawing terrain to depth buffer
 	SetupLightView(cam);
 
-	cbuffer.g_TerrainBeingRendered = 1.0f;
+	cbuffer.g_TerrainBeingRendered = 0.0f;
 	cbuffer.g_SkipCausticsCalculation = 1.0f;
 
 	pContext->IASetInputLayout(heightfield_inputlayout);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST);
 	//pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
+	pContext->HSSetShaderResources(0, 1, &g_HeightfieldTexture);
+
+	pContext->DSSetShaderResources(0, 1, &g_HeightfieldTexture);
+	pContext->DSSetShaderResources(1, 1, &g_LayerdefTexture);
+	pContext->DSSetShaderResources(2, 1, &g_SandBumpTexture);
+	pContext->DSSetShaderResources(3, 1, &g_RockBumpTexture);
+
 	pContext->VSSetShader(PassThroughVS, nullptr, 0);
 	pContext->HSSetShader(PatchHS, nullptr, 0);
 	pContext->DSSetShader(HeightFieldPatchDS, nullptr, 0);
 	pContext->PSSetShader(ColorPS, nullptr, 0);
 
-	UINT stride = sizeof(float) * 4;
+	UINT stride = sizeof(float) * 4;//PATCH_PARAMETERS DXGI_FORMAT_R32G32B32A32_FLOAT
 	UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 

@@ -14,6 +14,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="StepTimer.h" />
     <ClInclude Include="Terrain.h" />
+    <ClInclude Include="Test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -45,6 +46,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="TerrainDS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="mainVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

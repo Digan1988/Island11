@@ -87,7 +87,7 @@ cbuffer cb: register(b0)
 		float       unuse = 0;
 };
 
-Texture2D g_HeightfieldTexture : register(t0);
+Texture2D g_HeightfieldTexture : register(t0);//Карта высот
 Texture2D g_LayerdefTexture : register(t1);
 Texture2D g_SandBumpTexture : register(t2);
 Texture2D g_RockBumpTexture : register(t3);
@@ -172,8 +172,6 @@ PSIn_Diffuse HeightFieldPatchDS(PatchData input,
 
 	// fetching base heightmap,normal and moving vertices along y axis
 	float4 base_texvalue = g_HeightfieldTexture.SampleLevel(SamplerLinearWrap, texcoord0to1, 0);
-	float3 base_normal = base_texvalue.xyz;
-	base_normal.z = -base_normal.z;
 
 	float3 vertexPosition;
 	vertexPosition.xz = input.origin + uv * input.size;
@@ -186,15 +184,18 @@ PSIn_Diffuse HeightFieldPatchDS(PatchData input,
 	// fetching layer definition texture
 	float4 layerdef = g_LayerdefTexture.SampleLevel(SamplerLinearWrap, texcoord0to1, 0);
 
-		// default detail texture
-		float4 detail_texvalue = g_SandBumpTexture.SampleLevel(SamplerLinearWrap, texcoord0to1*g_SandBumpTexcoordScale, detailmap_miplevel).rbga;
-		float3 detail_normal = normalize(2 * detail_texvalue.xyz - float3(1, 0, 1));
-		float detail_height = (detail_texvalue.w - 0.5)*g_SandBumpHeightScale;
+	// default detail texture
+	float4 detail_texvalue = g_SandBumpTexture.SampleLevel(SamplerLinearWrap, texcoord0to1*g_SandBumpTexcoordScale, detailmap_miplevel).rbga;
+	float3 detail_normal = normalize(2 * detail_texvalue.xyz - float3(1, 0, 1));
+	float detail_height = (detail_texvalue.w - 0.5)*g_SandBumpHeightScale;
 
 	// rock detail texture
 	detail_texvalue = g_RockBumpTexture.SampleLevel(SamplerLinearWrap, texcoord0to1*g_RockBumpTexcoordScale, detailmap_miplevel).rbga;
 	detail_normal = lerp(detail_normal, normalize(2 * detail_texvalue.xyz - float3(1, 1.4, 1)), layerdef.w);
 	detail_height = lerp(detail_height, (detail_texvalue.w - 0.5)*g_RockBumpHeightScale, layerdef.w);
+
+	float3 base_normal = base_texvalue.xyz;
+	base_normal.z = -base_normal.z;
 
 	// moving vertices by detail height along base normal
 	vertexPosition += base_normal*detail_height;

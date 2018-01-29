@@ -114,7 +114,7 @@ float3 CalculateFogColor(float3 pixel_to_light_vector, float3 pixel_to_eye_vecto
 
 float4 HeightFieldPatchPS(PSIn_Diffuse input) : SV_Target
 {
-	float4 color;
+	float4 color;//цвет пикселя ландшафта
 	float3 pixel_to_light_vector = normalize(g_LightPosition - input.positionWS);
 	float3 pixel_to_eye_vector = normalize(g_CameraPosition - input.positionWS);
 	float3 microbump_normal;
@@ -174,6 +174,7 @@ float4 HeightFieldPatchPS(PSIn_Diffuse input) : SV_Target
 	// applying fog
 	color.rgb = lerp(CalculateFogColor(pixel_to_light_vector, pixel_to_eye_vector).rgb, color.rgb, min(1, exp(-length(g_CameraPosition - input.positionWS)*g_FogDensity)));
 	color.a = length(g_CameraPosition - input.positionWS);
+
 	return color;
 }
 
