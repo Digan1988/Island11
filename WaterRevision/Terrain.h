@@ -231,7 +231,7 @@ private:
 	ID3D11ShaderResourceView *g_RockBumpTexture;
 	//renderTarrain, renderReflection, renderTarrainToDepthBuffer: HeightFieldPatchDS в слот 2
 	ID3D11ShaderResourceView *g_SandBumpTexture;
-	//renderWater: WaterPatchDS слот 6
+	//renderWater: WaterPatchDS слот 6, renderCaustics: WaterNormalmapCombinePS слот 7
 	ID3D11ShaderResourceView *g_WaterBumpTexture;
 
 	//renderTarrain, renderReflection: HeightFieldPatchPS слот 0

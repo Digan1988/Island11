@@ -1157,6 +1157,8 @@ void Terrain::renderCaustics(ID3D11DeviceContext* pContext, Camera *cam, double 
 	pContext->IASetInputLayout(trianglestrip_inputlayout);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
+	pContext->PSSetShaderResources(7, 1, &g_WaterBumpTexture);
+
 	pContext->VSSetShader(WaterNormalmapCombineVS, nullptr, 0);
 	pContext->HSSetShader(nullptr, nullptr, 0);
 	pContext->DSSetShader(nullptr, nullptr, 0);
