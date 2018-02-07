@@ -8,19 +8,19 @@ struct CBuffer
 {
 	// rendering control variables
 	float		g_RenderCaustics;//HeightFieldPatchDS
-	float		g_UseDynamicLOD;//PatchConstantHS,HeightFieldPatchDS, WaterPatchDS
-	float		g_FrustumCullInHS;//PatchConstantHS
-	float       g_DynamicTessFactor;//PatchConstantHS,HeightFieldPatchDS, WaterPatchDS
+	float		g_UseDynamicLOD;//PatchHS,HeightFieldPatchDS, WaterPatchDS
+	float		g_FrustumCullInHS;//PatchHS
+	float       g_DynamicTessFactor;//PatchHS,HeightFieldPatchDS, WaterPatchDS
 
-	float       g_StaticTessFactor;//PatchConstantHS,HeightFieldPatchDS, WaterPatchDS
-	float		g_TerrainBeingRendered;//PatchConstantHS
+	float       g_StaticTessFactor;//PatchHS,HeightFieldPatchDS, WaterPatchDS
+	float		g_TerrainBeingRendered;//PatchHS
 	float		g_HalfSpaceCullSign;//HeightFieldPatchPS, 
 	float		g_HalfSpaceCullPosition;//HeightFieldPatchPS
 
 	// view/time dependent variables
 	XMFLOAT4X4  g_ModelViewMatrix;//WaterPatchPS
 
-	XMFLOAT4X4  g_ModelViewProjectionMatrix;//HeightFieldPatchDS,WaterPatchDS,PatchConstantHS,WaterPatchPS,SkyVS
+	XMFLOAT4X4  g_ModelViewProjectionMatrix;//HeightFieldPatchDS,WaterPatchDS,PatchHS,WaterPatchPS,SkyVS
 
 	XMFLOAT4X4	g_ModelViewProjectionMatrixInv;//не используется?
 
@@ -28,10 +28,10 @@ struct CBuffer
 
 	XMFLOAT4X4  g_LightModelViewProjectionMatrixInv;//не используется?
 
-	XMFLOAT3    g_CameraPosition;//HeightFieldPatchDS,WaterPatchDS,PatchConstantHS,HeightFieldPatchPS,WaterNormalmapCombinePS,SkyPS,WaterPatchPS
+	XMFLOAT3    g_CameraPosition;//HeightFieldPatchDS,WaterPatchDS,PatchHS,HeightFieldPatchPS,WaterNormalmapCombinePS,SkyPS,WaterPatchPS
 	float		g_SkipCausticsCalculation;//HeightFieldPatchDS
 
-	XMFLOAT3    g_CameraDirection;//PatchConstantHS
+	XMFLOAT3    g_CameraDirection;//PatchHS
 	int			g_MSSamples;//не используется?
 
 	XMFLOAT3    g_LightPosition;//HeightFieldPatchDS,HeightFieldPatchPS,SkyPS,WaterPatchPS
@@ -68,7 +68,7 @@ struct CBuffer
 	XMFLOAT2	g_HeightFieldOrigin = XMFLOAT2(0, 0);//не используется?
 
 	XMFLOAT3    g_AtmosphereBrightColor = { 1.0, 1.1, 1.4 };//HeightFieldPatchPS, SkyPS,WaterPatchPS
-	float		g_HeightFieldSize = 512;//HeightFieldPatchDS,WaterPatchDS,PatchHS(PatchConstantHS),WaterNormalmapCombinePS
+	float		g_HeightFieldSize = 512;//HeightFieldPatchDS,WaterPatchDS,PatchHS,WaterNormalmapCombinePS
 
 	XMFLOAT3    g_AtmosphereDarkColor = { 0.6, 0.6, 0.7 };//HeightFieldPatchPS,SkyPS,WaterPatchPS
 	float       unuse = 0;
@@ -76,7 +76,7 @@ struct CBuffer
 
 struct CBufferHS
 {
-	//PatchConstantHS
+	//PatchHS
 	XMFLOAT4X4  g_ModelViewProjectionMatrix;
 	XMFLOAT3    g_CameraPosition;
 	float		g_UseDynamicLOD;

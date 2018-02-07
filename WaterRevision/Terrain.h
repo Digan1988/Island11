@@ -64,11 +64,11 @@ public:
 	void CreateTerrain();
 
 	void renderTarrainToDepthBuffer(ID3D11DeviceContext* pContext, Camera *cam);
-	void renderCaustics(ID3D11DeviceContext* pContext, Camera *cam);
+	void renderCaustics(ID3D11DeviceContext* pContext, Camera *cam, double time);
 	void renderReflection(ID3D11DeviceContext* pContext, Camera *cam);
 	void renderTarrain(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam);
 	void renderRefraction(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport);
-	void renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam);
+	void renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam, double time);
 	void renderToBackBuffer(ID3D11DeviceContext* pContext, ID3D11RenderTargetView *colorBuffer, ID3D11DepthStencilView  *backBuffer, D3D11_VIEWPORT &currentViewport);
 	void renderSky(ID3D11DeviceContext* pContext);
 

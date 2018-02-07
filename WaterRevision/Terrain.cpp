@@ -1028,24 +1028,6 @@ void Terrain::Render(Camera *cam, ID3D11RenderTargetView *colorBuffer, ID3D11Dep
 	pContext->RSGetViewports(&cRT, &currentViewport);
 	pContext->OMGetRenderTargets(1, &colorBuffer, &backBuffer);
 
-	cbuffer.g_ZNear = 1.0f;
-	cbuffer.g_ZFar = 25000.0f;
-	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
-	cbuffer.g_WaterBumpTexcoordShift = XMFLOAT2(time*1.5f, time*0.75f);
-	cbuffer.g_ScreenSizeInv = XMFLOAT2(0.000710, 0.001319);
-	cbuffer.g_DynamicTessFactor = 50.0f;
-	cbuffer.g_StaticTessFactor = 12.0f;
-	cbuffer.g_UseDynamicLOD = 1.0f;
-	cbuffer.g_RenderCaustics = 1.0f;
-	cbuffer.g_HeightFieldOrigin = XMFLOAT2(0, 0);
-	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
-	cbuffer.g_FrustumCullInHS = 1.0f;
-
-	pContext->VSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
-	pContext->HSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
-	pContext->DSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
-	pContext->PSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
-
 	D3D11_VIEWPORT main_Viewport;
 	main_Viewport.Width = (float)BackbufferWidth*main_buffer_size_multiplier;
 	main_Viewport.Height = (float)BackbufferHeight*main_buffer_size_multiplier;
@@ -1054,12 +1036,17 @@ void Terrain::Render(Camera *cam, ID3D11RenderTargetView *colorBuffer, ID3D11Dep
 	main_Viewport.TopLeftX = 0;
 	main_Viewport.TopLeftY = 0;
 
+	pContext->VSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
+	pContext->HSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
+	pContext->DSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
+	pContext->PSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
+
 	renderTarrainToDepthBuffer(pContext, cam);
 
 	bool g_RenderCaustics = true;
 	if (g_RenderCaustics)
 	{
-		renderCaustics(pContext, cam);
+		renderCaustics(pContext, cam, time);
 	}
 
 	renderReflection(pContext, cam);
@@ -1068,7 +1055,7 @@ void Terrain::Render(Camera *cam, ID3D11RenderTargetView *colorBuffer, ID3D11Dep
 
 	renderRefraction(pContext, main_Viewport);
 
-	renderWater(pContext, main_Viewport, cam);
+	renderWater(pContext, main_Viewport, cam, time);
 
 	//renderSky(pContext);
 
@@ -1124,6 +1111,14 @@ void Terrain::renderTarrainToDepthBuffer(ID3D11DeviceContext* pContext, Camera *
 
 	cbuffer.g_TerrainBeingRendered = 1.0f;
 	cbuffer.g_SkipCausticsCalculation = 1.0f;
+	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
+	cbuffer.g_DynamicTessFactor = 50.0f;
+	cbuffer.g_StaticTessFactor = 12.0f;
+	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_RenderCaustics = 1.0f;
+	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
+	cbuffer.g_FrustumCullInHS = 1.0f;
+
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
 	unsigned int vertexCount = terrain_numpatches_1d*terrain_numpatches_1d;//4096
@@ -1137,7 +1132,7 @@ void Terrain::renderTarrainToDepthBuffer(ID3D11DeviceContext* pContext, Camera *
 	pContext->DSSetShader(nullptr, nullptr, 0);
 	pContext->PSSetShader(nullptr, nullptr, 0);
 }
-void Terrain::renderCaustics(ID3D11DeviceContext* pContext, Camera *cam)
+void Terrain::renderCaustics(ID3D11DeviceContext* pContext, Camera *cam, double time)
 {
 	D3D11_VIEWPORT water_normalmap_resource_viewport;
 	water_normalmap_resource_viewport.Width = water_normalmap_resource_buffer_size_xy;
@@ -1163,6 +1158,8 @@ void Terrain::renderCaustics(ID3D11DeviceContext* pContext, Camera *cam)
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	pContext->VSSetShader(WaterNormalmapCombineVS, nullptr, 0);
+	pContext->HSSetShader(nullptr, nullptr, 0);
+	pContext->DSSetShader(nullptr, nullptr, 0);
 	pContext->PSSetShader(WaterNormalmapCombinePS, nullptr, 0);
 
 	UINT stride = sizeof(float) * 6;//POSITION (DXGI_FORMAT_R32G32B32A32_FLOAT) + TEXCOORD (DXGI_FORMAT_R32G32_FLOAT)
@@ -1170,6 +1167,9 @@ void Terrain::renderCaustics(ID3D11DeviceContext* pContext, Camera *cam)
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 
 	SetupNormalView(cam);
+
+	cbuffer.g_WaterBumpTexcoordShift = XMFLOAT2(time*1.5f, time*0.75f);//XMFLOAT2(0, 0);
+	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
 
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
@@ -1251,6 +1251,14 @@ void Terrain::renderReflection(ID3D11DeviceContext* pContext, Camera *cam)
 
 	SetupLightView2(cam);
 	cbuffer.g_SkipCausticsCalculation = 1.0f;
+	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
+	cbuffer.g_DynamicTessFactor = 50.0f;
+	cbuffer.g_StaticTessFactor = 12.0f;
+	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_RenderCaustics = 1.0f;
+	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
+	cbuffer.g_FrustumCullInHS = 1.0f;
+
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
 	unsigned int vertexCount = terrain_numpatches_1d*terrain_numpatches_1d;//4096
@@ -1308,6 +1316,14 @@ void Terrain::renderTarrain(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_
 
 	cbuffer.g_TerrainBeingRendered = 1.0f;
 	cbuffer.g_SkipCausticsCalculation = 0.0f;
+	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
+	cbuffer.g_DynamicTessFactor = 50.0f;
+	cbuffer.g_StaticTessFactor = 12.0f;
+	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_RenderCaustics = 1.0f;
+	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
+	cbuffer.g_FrustumCullInHS = 1.0f;
+
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
 	pContext->Draw(terrain_numpatches_1d*terrain_numpatches_1d, 0);
@@ -1353,7 +1369,7 @@ void Terrain::renderRefraction(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &ma
 	//чистка
 	pContext->PSSetShaderResources(13, 1, &nullSRV);
 }
-void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam)
+void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Viewport, Camera *cam, double time)
 {
 	pContext->RSSetViewports(1, &main_Viewport);
 
@@ -1390,7 +1406,19 @@ void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Vi
 	pContext->IASetVertexBuffers(0, 1, &heightfield_vertexbuffer, &stride, &offset);
 
 	SetupLightView2(cam);
+
+	cbuffer.g_ZNear = 1.0f;
+	cbuffer.g_ZFar = 25000.0f;
 	cbuffer.g_TerrainBeingRendered = 0.0f;
+	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
+	cbuffer.g_WaterBumpTexcoordShift = XMFLOAT2(time*1.5f, time*0.75f);//XMFLOAT2(0, 0); 
+	cbuffer.g_ScreenSizeInv = XMFLOAT2(0.000710, 0.001319);
+	cbuffer.g_DynamicTessFactor = 50.0f;
+	cbuffer.g_StaticTessFactor = 12.0f;
+	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
+	cbuffer.g_FrustumCullInHS = 1.0f;
+
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
 	pContext->Draw(terrain_numpatches_1d*terrain_numpatches_1d, 0);
@@ -1453,6 +1481,7 @@ void Terrain::renderSky(ID3D11DeviceContext* pContext)
 	UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &sky_vertexbuffer, &stride, &offset);
 
+	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
 	pContext->Draw(sky_gridpoints*(sky_gridpoints + 2) * 2, 0);
