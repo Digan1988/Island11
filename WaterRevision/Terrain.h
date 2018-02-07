@@ -51,6 +51,12 @@ using namespace DirectX;
       }
 #endif
 
+#define LightPosition XMFLOAT3(-10000.0f, 6500.0f, 10000.0f)
+#define DynamicTessFactor 50.0f
+#define StaticTessFactor 12.0f
+#define FrustumCullInHS 1.0f
+#define UseDynamicLOD 1.0f
+
 class Terrain
 {
 public:

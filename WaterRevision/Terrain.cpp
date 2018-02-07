@@ -1111,13 +1111,13 @@ void Terrain::renderTarrainToDepthBuffer(ID3D11DeviceContext* pContext, Camera *
 
 	cbuffer.g_TerrainBeingRendered = 1.0f;
 	cbuffer.g_SkipCausticsCalculation = 1.0f;
-	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
-	cbuffer.g_DynamicTessFactor = 50.0f;
-	cbuffer.g_StaticTessFactor = 12.0f;
-	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_LightPosition = LightPosition;
+	cbuffer.g_DynamicTessFactor = DynamicTessFactor;
+	cbuffer.g_StaticTessFactor = StaticTessFactor;
+	cbuffer.g_UseDynamicLOD = UseDynamicLOD;
 	cbuffer.g_RenderCaustics = 1.0f;
 	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
-	cbuffer.g_FrustumCullInHS = 1.0f;
+	cbuffer.g_FrustumCullInHS = FrustumCullInHS;
 
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
@@ -1251,13 +1251,13 @@ void Terrain::renderReflection(ID3D11DeviceContext* pContext, Camera *cam)
 
 	SetupLightView2(cam);
 	cbuffer.g_SkipCausticsCalculation = 1.0f;
-	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
-	cbuffer.g_DynamicTessFactor = 50.0f;
-	cbuffer.g_StaticTessFactor = 12.0f;
-	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_LightPosition = LightPosition;
+	cbuffer.g_DynamicTessFactor = DynamicTessFactor;
+	cbuffer.g_StaticTessFactor = StaticTessFactor;
+	cbuffer.g_UseDynamicLOD = UseDynamicLOD;
 	cbuffer.g_RenderCaustics = 1.0f;
 	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
-	cbuffer.g_FrustumCullInHS = 1.0f;
+	cbuffer.g_FrustumCullInHS = FrustumCullInHS;
 
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
@@ -1316,13 +1316,13 @@ void Terrain::renderTarrain(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_
 
 	cbuffer.g_TerrainBeingRendered = 1.0f;
 	cbuffer.g_SkipCausticsCalculation = 0.0f;
-	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
-	cbuffer.g_DynamicTessFactor = 50.0f;
-	cbuffer.g_StaticTessFactor = 12.0f;
-	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_LightPosition = LightPosition;
+	cbuffer.g_DynamicTessFactor = DynamicTessFactor;
+	cbuffer.g_StaticTessFactor = StaticTessFactor;
+	cbuffer.g_UseDynamicLOD = UseDynamicLOD;
 	cbuffer.g_RenderCaustics = 1.0f;
 	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
-	cbuffer.g_FrustumCullInHS = 1.0f;
+	cbuffer.g_FrustumCullInHS = FrustumCullInHS;
 
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
@@ -1410,14 +1410,14 @@ void Terrain::renderWater(ID3D11DeviceContext* pContext, D3D11_VIEWPORT &main_Vi
 	cbuffer.g_ZNear = 1.0f;
 	cbuffer.g_ZFar = 25000.0f;
 	cbuffer.g_TerrainBeingRendered = 0.0f;
-	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
+	cbuffer.g_LightPosition = LightPosition;
 	cbuffer.g_WaterBumpTexcoordShift = XMFLOAT2(time*1.5f, time*0.75f);//XMFLOAT2(0, 0); 
 	cbuffer.g_ScreenSizeInv = XMFLOAT2(0.000710, 0.001319);
-	cbuffer.g_DynamicTessFactor = 50.0f;
-	cbuffer.g_StaticTessFactor = 12.0f;
-	cbuffer.g_UseDynamicLOD = 1.0f;
+	cbuffer.g_DynamicTessFactor = DynamicTessFactor;
+	cbuffer.g_StaticTessFactor = StaticTessFactor;
+	cbuffer.g_UseDynamicLOD = UseDynamicLOD;
 	cbuffer.g_HeightFieldSize = terrain_gridpoints*terrain_geometry_scale;
-	cbuffer.g_FrustumCullInHS = 1.0f;
+	cbuffer.g_FrustumCullInHS = FrustumCullInHS;
 
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
@@ -1481,7 +1481,7 @@ void Terrain::renderSky(ID3D11DeviceContext* pContext)
 	UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &sky_vertexbuffer, &stride, &offset);
 
-	cbuffer.g_LightPosition = XMFLOAT3(-10000.0f, 6500.0f, 10000.0f);
+	cbuffer.g_LightPosition = LightPosition;
 	pContext->UpdateSubresource(cbPerObjectBuffer, 0, NULL, &cbuffer, 0, 0);
 
 	pContext->Draw(sky_gridpoints*(sky_gridpoints + 2) * 2, 0);
@@ -1489,7 +1489,7 @@ void Terrain::renderSky(ID3D11DeviceContext* pContext)
 
 void Terrain::SetupLightView(Camera *cam)
 {
-	XMVECTOR EyePoint = XMVectorSet(-10000.0f, 6500.0f, 10000.0f, 0);
+	XMVECTOR EyePoint = XMLoadFloat3(&LightPosition);
 	XMVECTOR LookAtPoint = XMVectorSet(terrain_far_range / 2.0f, 0.0f, terrain_far_range / 2.0f, 0);
 	XMVECTOR lookUp = XMVectorSet(0, 1, 0, 0);
 
@@ -1518,7 +1518,7 @@ void Terrain::SetupLightView(Camera *cam)
 
 void Terrain::SetupLightView2(Camera *cam)
 {
-	XMVECTOR EyePoint = XMVectorSet(-10000.0f, 6500.0f, 10000.0f, 0);
+	XMVECTOR EyePoint = XMLoadFloat3(&LightPosition);
 	XMVECTOR LookAtPoint = XMVectorSet(terrain_far_range / 2.0f, 0.0f, terrain_far_range / 2.0f, 0);
 	XMVECTOR lookUp = XMVectorSet(0, 1, 0, 0);
 
