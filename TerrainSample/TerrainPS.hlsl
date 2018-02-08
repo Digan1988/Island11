@@ -114,28 +114,22 @@ float3 CalculateFogColor(float3 pixel_to_light_vector, float3 pixel_to_eye_vecto
 
 float4 HeightFieldPatchPS(PSIn_Diffuse input) : SV_Target
 {
-	float4 color;//цвет пикселя ландшафта
-	float3 pixel_to_light_vector = normalize(g_LightPosition - input.positionWS);
-	float3 pixel_to_eye_vector = normalize(g_CameraPosition - input.positionWS);
-	float3 microbump_normal;
-
-	float3x3 normal_rotation_matrix;
-
 	// culling halfspace if needed
 	clip(g_HalfSpaceCullSign*(input.positionWS.y - g_HalfSpaceCullPosition));
 
 	// fetching default microbump normal
-	microbump_normal = normalize(2 * g_SandMicroBumpTexture.Sample(SamplerAnisotropicWrap, input.texcoord).rbg - float3 (1.0, 1.0, 1.0));
+	float3 microbump_normal = normalize(2 * g_SandMicroBumpTexture.Sample(SamplerAnisotropicWrap, input.texcoord).rbg - float3 (1.0, 1.0, 1.0));
 	microbump_normal = normalize(lerp(microbump_normal, 2 * g_RockMicroBumpTexture.Sample(SamplerAnisotropicWrap, input.texcoord).rbg - float3 (1.0, 1.0, 1.0), input.layerdef.w));
 
 	//calculating base normal rotation matrix
+	float3x3 normal_rotation_matrix;
 	normal_rotation_matrix[1] = input.normal;
 	normal_rotation_matrix[2] = normalize(cross(float3(-1.0, 0.0, 0.0), normal_rotation_matrix[1]));
 	normal_rotation_matrix[0] = normalize(cross(normal_rotation_matrix[2], normal_rotation_matrix[1]));
 	microbump_normal = mul(microbump_normal, normal_rotation_matrix);
 
 	// getting diffuse color
-	color = g_SlopeDiffuseTexture.Sample(SamplerAnisotropicWrap, input.texcoord);
+	float4 color = g_SlopeDiffuseTexture.Sample(SamplerAnisotropicWrap, input.texcoord);
 	color = lerp(color, g_SandDiffuseTexture.Sample(SamplerAnisotropicWrap, input.texcoord), input.layerdef.g*input.layerdef.g);
 	color = lerp(color, g_RockDiffuseTexture.Sample(SamplerAnisotropicWrap, input.texcoord), input.layerdef.w*input.layerdef.w);
 	color = lerp(color, g_GrassDiffuseTexture.Sample(SamplerAnisotropicWrap, input.texcoord), input.layerdef.b);
@@ -157,8 +151,10 @@ float4 HeightFieldPatchPS(PSIn_Diffuse input) : SV_Target
 	shadow_factor += 0.2*g_DepthTexture.SampleCmp(SamplerDepthAnisotropic, positionLS.xy + float2(-dsf, dsf), positionLS.z* 0.995f).r;
 	shadow_factor += 0.2*g_DepthTexture.SampleCmp(SamplerDepthAnisotropic, positionLS.xy + float2(dsf, -dsf), positionLS.z* 0.995f).r;
 	shadow_factor += 0.2*g_DepthTexture.SampleCmp(SamplerDepthAnisotropic, positionLS.xy + float2(-dsf, -dsf), positionLS.z* 0.995f).r;
-	color.rgb *= max(0, dot(pixel_to_light_vector, microbump_normal))*shadow_factor + 0.2;
 
+	float3 pixel_to_light_vector = normalize(g_LightPosition - input.positionWS);
+
+	color.rgb *= max(0, dot(pixel_to_light_vector, microbump_normal))*shadow_factor + 0.2;
 
 	// adding light from the sky
 	color.rgb += (0.0 + 0.2*max(0, (dot(float3(0, 1, 0), microbump_normal))))*float3(0.2, 0.2, 0.3);
@@ -166,10 +162,10 @@ float4 HeightFieldPatchPS(PSIn_Diffuse input) : SV_Target
 	// making all a bit brighter, simultaneously pretending the wet surface is darker than normal;
 	color.rgb *= 0.5 + 0.8*max(0, min(1, input.positionWS.y*0.5 + 0.5));
 
-
-
 	// applying refraction caustics
 	color.rgb *= (1.0 + max(0, 0.4 + 0.6*dot(pixel_to_light_vector, microbump_normal))*input.depthmap_scaler.a*(0.4 + 0.6*shadow_factor));
+
+	float3 pixel_to_eye_vector = normalize(g_CameraPosition - input.positionWS);
 
 	// applying fog
 	color.rgb = lerp(CalculateFogColor(pixel_to_light_vector, pixel_to_eye_vector).rgb, color.rgb, min(1, exp(-length(g_CameraPosition - input.positionWS)*g_FogDensity)));
@@ -269,24 +265,6 @@ float GetConservativeRefractionDepth(float2 position)
 
 float4 WaterPatchPS(PSIn_Diffuse input) : SV_Target
 {
-	float4 color;
-	float3 pixel_to_light_vector = normalize(g_LightPosition - input.positionWS);
-	float3 pixel_to_eye_vector = normalize(g_CameraPosition - input.positionWS);
-	float3 reflected_eye_to_pixel_vector;
-	float3 microbump_normal;
-	float3x3 normal_rotation_matrix;
-
-	float fresnel_factor;
-	float diffuse_factor;
-	float specular_factor;
-	float scatter_factor;
-	float4 refraction_color;
-	float4 reflection_color;
-	float4 disturbance_eyespace;
-
-	float water_depth;
-	float4 water_color;
-
 	// calculating pixel position in light space
 	float4 positionLS = mul(float4(input.positionWS, 1), g_LightModelViewProjectionMatrix);
 		positionLS.xyz /= positionLS.w;
@@ -301,24 +279,27 @@ float4 WaterPatchPS(PSIn_Diffuse input) : SV_Target
 	shadow_factor += 0.2*g_DepthTexture.SampleCmp(SamplerDepthAnisotropic, positionLS.xy + float2(dsf, -dsf), positionLS.z* 0.995f).r;
 	shadow_factor += 0.2*g_DepthTexture.SampleCmp(SamplerDepthAnisotropic, positionLS.xy + float2(-dsf, -dsf), positionLS.z* 0.995f).r;
 
-	// need more high frequency bumps for plausible water surface, so creating normal defined by 2 instances of same bump texture
-	microbump_normal = normalize(2 * g_WaterBumpTexture.Sample(SamplerAnisotropicWrap, input.texcoord - g_WaterBumpTexcoordShift*0.2).gbr - float3 (1, -8, 1));
-	microbump_normal += normalize(2 * g_WaterBumpTexture.Sample(SamplerAnisotropicWrap, input.texcoord*0.5 + g_WaterBumpTexcoordShift*0.05).gbr - float3 (1, -8, 1));
-
 	// calculating base normal rotation matrix
+	float3x3 normal_rotation_matrix;
 	normal_rotation_matrix[1] = input.normal.xyz;
 	normal_rotation_matrix[2] = normalize(cross(float3(0.0, 0.0, -1.0), normal_rotation_matrix[1]));
 	normal_rotation_matrix[0] = normalize(cross(normal_rotation_matrix[2], normal_rotation_matrix[1]));
 
+	// need more high frequency bumps for plausible water surface, so creating normal defined by 2 instances of same bump texture
+	float3 microbump_normal = normalize(2 * g_WaterBumpTexture.Sample(SamplerAnisotropicWrap, input.texcoord - g_WaterBumpTexcoordShift*0.2).gbr - float3 (1, -8, 1));
+	microbump_normal += normalize(2 * g_WaterBumpTexture.Sample(SamplerAnisotropicWrap, input.texcoord*0.5 + g_WaterBumpTexcoordShift*0.05).gbr - float3 (1, -8, 1));
+
 	// applying base normal rotation matrix to high frequency bump normal
 	microbump_normal = mul(normalize(microbump_normal), normal_rotation_matrix);
-
 
 	// simulating scattering/double refraction: light hits the side of wave, travels some distance in water, and leaves wave on the other side
 	// it's difficult to do it physically correct without photon mapping/ray tracing, so using simple but plausible emulation below
 
 	// only the crests of water waves generate double refracted light
-	scatter_factor = 2.5*max(0, input.positionWS.y*0.25 + 0.25);
+	float scatter_factor = 2.5*max(0, input.positionWS.y*0.25 + 0.25);
+
+	float3 pixel_to_light_vector = normalize(g_LightPosition - input.positionWS);
+	float3 pixel_to_eye_vector = normalize(g_CameraPosition - input.positionWS);
 
 	// the waves that lie between camera and light projection on water plane generate maximal amount of double refracted light 
 	scatter_factor *= shadow_factor*pow(max(0.0, dot(normalize(float3(pixel_to_light_vector.x, 0.0, pixel_to_light_vector.z)), -pixel_to_eye_vector)), 2.0);
@@ -338,17 +319,16 @@ float4 WaterPatchPS(PSIn_Diffuse input) : SV_Target
 
 	// calculating fresnel factor 
 	float r = (1.2 - 1.0) / (1.2 + 1.0);
-	fresnel_factor = max(0.0, min(1.0, r + (1.0 - r)*pow(1.0 - dot(microbump_normal, pixel_to_eye_vector), 4)));
+	float fresnel_factor = max(0.0, min(1.0, r + (1.0 - r)*pow(1.0 - dot(microbump_normal, pixel_to_eye_vector), 4)));
 
 	// calculating specular factor
-	reflected_eye_to_pixel_vector = -pixel_to_eye_vector + 2 * dot(pixel_to_eye_vector, microbump_normal)*microbump_normal;
-	specular_factor = shadow_factor*fresnel_factor*pow(max(0, dot(pixel_to_light_vector, reflected_eye_to_pixel_vector)), g_WaterSpecularPower);
+	float3 reflected_eye_to_pixel_vector = -pixel_to_eye_vector + 2 * dot(pixel_to_eye_vector, microbump_normal)*microbump_normal;
 
 	// calculating diffuse intensity of water surface itself
-	diffuse_factor = g_WaterColorIntensity.x + g_WaterColorIntensity.y*max(0, dot(pixel_to_light_vector, microbump_normal));
+	float diffuse_factor = g_WaterColorIntensity.x + g_WaterColorIntensity.y*max(0, dot(pixel_to_light_vector, microbump_normal));
 
 	// calculating disturbance which has to be applied to planar reflections/refractions to give plausible results
-	disturbance_eyespace = mul(float4(microbump_normal.x, 0, microbump_normal.z, 0), g_ModelViewMatrix);
+	float4 disturbance_eyespace = mul(float4(microbump_normal.x, 0, microbump_normal.z, 0), g_ModelViewMatrix);
 
 	float2 reflection_disturbance = float2(disturbance_eyespace.x, disturbance_eyespace.z)*0.03;
 
@@ -373,9 +353,7 @@ float4 WaterPatchPS(PSIn_Diffuse input) : SV_Target
 	refraction_depth = g_ZFar*g_ZNear / (g_ZFar - refraction_depth*(g_ZFar - g_ZNear));
 	float4 vertex_in_viewspace = mul(float4(input.positionWS, 1), g_ModelViewMatrix);
 
-	water_depth = refraction_depth - vertex_in_viewspace.z;
-
-	float nondisplaced_water_depth = water_depth;
+	float water_depth = refraction_depth - vertex_in_viewspace.z;
 
 	// scaling refraction texture displacement amount according to water depth, with some limit
 	refraction_disturbance *= min(2, water_depth);
@@ -392,23 +370,18 @@ float4 WaterPatchPS(PSIn_Diffuse input) : SV_Target
 	vertex_in_viewspace = mul(float4(input.positionWS, 1), g_ModelViewMatrix);
 	float conservative_water_depth = conservative_refraction_depth - vertex_in_viewspace.z;
 
-	if (conservative_water_depth<0)
+	float nondisplaced_water_depth = water_depth;
+	if (conservative_water_depth < 0)
 	{
 		refraction_disturbance = 0;
 		water_depth = nondisplaced_water_depth;
 	}
 	water_depth = max(0, water_depth);
-
-	// getting reflection and refraction color at disturbed texture coordinates
-	reflection_color = g_ReflectionTexture.SampleLevel(SamplerLinearClamp, float2(input.position.x*g_ScreenSizeInv.x, 1.0 - input.position.y*g_ScreenSizeInv.y) + reflection_disturbance, 0);
 	
-	//return reflection_color;
-	///
-	
-	refraction_color = g_RefractionTexture.SampleLevel(SamplerLinearClamp, input.position.xy*g_ScreenSizeInv + refraction_disturbance, 0);
+	float4 refraction_color = g_RefractionTexture.SampleLevel(SamplerLinearClamp, input.position.xy*g_ScreenSizeInv + refraction_disturbance, 0);
 
 	// calculating water surface color and applying atmospheric fog to it
-	water_color = diffuse_factor*float4(g_WaterDeepColor, 1);
+	float4 water_color = diffuse_factor*float4(g_WaterDeepColor, 1);
 	water_color.rgb = lerp(CalculateFogColor(pixel_to_light_vector, pixel_to_eye_vector).rgb, water_color.rgb, min(1, exp(-length(g_CameraPosition - input.positionWS)*g_FogDensity)));
 
 	// fading fresnel factor to 0 to soften water surface edges
@@ -417,7 +390,13 @@ float4 WaterPatchPS(PSIn_Diffuse input) : SV_Target
 	// fading refraction color to water color according to distance that refracted ray travels in water 
 	refraction_color = lerp(water_color, refraction_color, min(1, 1.0*exp(-water_depth / 8.0)));
 
+	float specular_factor = shadow_factor*fresnel_factor*pow(max(0, dot(pixel_to_light_vector, reflected_eye_to_pixel_vector)), g_WaterSpecularPower);
+
+	// getting reflection and refraction color at disturbed texture coordinates
+	float4 reflection_color = g_ReflectionTexture.SampleLevel(SamplerLinearClamp, float2(input.position.x*g_ScreenSizeInv.x, 1.0 - input.position.y*g_ScreenSizeInv.y) + reflection_disturbance, 0);
+
 	// combining final water color
+	float4 color;
 	color.rgb = lerp(refraction_color.rgb, reflection_color.rgb, fresnel_factor);
 	color.rgb += g_WaterSpecularIntensity*specular_factor*g_WaterSpecularColor*fresnel_factor;
 	color.rgb += g_WaterScatterColor*scatter_factor;
